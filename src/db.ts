@@ -22,7 +22,12 @@ function openDb(): Promise<IDBDatabase> {
   });
 }
 
-type PartialChunk = { key: string; roomCode: string; fileId: string; offset: number; data: ArrayBuffer };
+type PartialChunk = { key: string; roomCode: string; fileId: string; offset: number; data: ArrayBuffer; hash: string };
+
+async function chunkHash(data: ArrayBuffer): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return [...new Uint8Array(digest)].map((part) => part.toString(16).padStart(2, '0')).join('');
+}
 
 export async function getPartialChunks(roomCode: string, fileId: string): Promise<ArrayBuffer[]> {
   const db = await openDb();
@@ -32,17 +37,25 @@ export async function getPartialChunks(roomCode: string, fileId: string): Promis
     request.onerror = () => reject(request.error);
   });
   db.close();
-  return records
+  const matching = records
     .filter((record) => record.roomCode === roomCode && record.fileId === fileId)
-    .sort((a, b) => a.offset - b.offset)
-    .map((record) => record.data);
+    .sort((a, b) => a.offset - b.offset);
+  const chunks: ArrayBuffer[] = [];
+  let expectedOffset = 0;
+  for (const record of matching) {
+    if (record.offset !== expectedOffset || !record.hash || await chunkHash(record.data) !== record.hash) break;
+    chunks.push(record.data);
+    expectedOffset += record.data.byteLength;
+  }
+  return chunks;
 }
 
 export async function savePartialChunk(roomCode: string, fileId: string, offset: number, data: ArrayBuffer): Promise<void> {
+  const hash = await chunkHash(data);
   const db = await openDb();
   await new Promise<void>((resolve, reject) => {
     const transaction = db.transaction(PARTIALS, 'readwrite');
-    transaction.objectStore(PARTIALS).put({ key: `${roomCode}:${fileId}:${offset}`, roomCode, fileId, offset, data });
+    transaction.objectStore(PARTIALS).put({ key: `${roomCode}:${fileId}:${offset}`, roomCode, fileId, offset, data, hash });
     transaction.oncomplete = () => resolve();
     transaction.onerror = () => reject(transaction.error);
   });

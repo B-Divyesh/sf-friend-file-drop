@@ -297,9 +297,10 @@ function setupTransferApp(): void {
   function renderPairing(): void {
     const area = root!.querySelector<HTMLDivElement>('#pairing-area')!;
     if (!files.length) { area.innerHTML = ''; return; }
-    area.innerHTML = `<section class="pair-sheet" aria-labelledby="pair-title"><h3 id="pair-title">Pair the receiving browser</h3><ol class="pair-steps"><li><button class="button primary" type="button" id="make-room">Make a six-word room</button><div id="offer-box"></div></li><li><p>Tell the receiver the six words. This room expires after 15 minutes.</p><details class="relay-choice"><summary>Direct path not working?</summary><p>The relay receives file names, hashes, contents, IP addresses, and byte counts. It holds up to 25 MB until the receipt or room expiry.</p><button class="button secondary" type="button" id="sender-relay" disabled>Use the private relay</button></details></li><li><button class="button primary" type="button" id="send-now" disabled>Send ${files.length} file${files.length === 1 ? '' : 's'}</button><p id="real-state" class="state-note" role="status">Make a room to start pairing.</p></li></ol></section>`;
-    area.querySelector('#make-room')?.addEventListener('click', async () => {
-      roomCode = makeRoomCode();
+    const previousRoom = localStorage.getItem('friend-file-drop:last-room') || '';
+    area.innerHTML = `<section class="pair-sheet" aria-labelledby="pair-title"><h3 id="pair-title">Pair the receiving browser</h3><ol class="pair-steps"><li><button class="button primary" type="button" id="make-room">Make a six-word room</button><details class="resume-room"><summary>Resume a previous room</summary><label for="resume-code">Previous room code</label><input id="resume-code" class="room-input" value="${escapeText(previousRoom)}" autocomplete="off" spellcheck="false" /><button class="text-button" id="resume-room" type="button">Reopen this room</button></details><div id="offer-box"></div></li><li><p>Tell the receiver the six words. This room expires after 15 minutes.</p><details class="relay-choice"><summary>Direct path not working?</summary><p>The relay receives file names, hashes, contents, IP addresses, and byte counts. It holds up to 25 MB until the receipt or room expiry.</p><button class="button secondary" type="button" id="sender-relay" disabled>Use the private relay</button></details></li><li><button class="button primary" type="button" id="send-now" disabled>Send ${files.length} file${files.length === 1 ? '' : 's'}</button><p id="real-state" class="state-note" role="status">Make a room to start pairing.</p></li></ol></section>`;
+    const openRoom = async (code: string) => {
+      roomCode = code;
       transfer = new DirectTransfer(roomCode, hooks());
       const state = area.querySelector<HTMLElement>('#real-state')!;
       state.textContent = 'Opening the short-lived room…';
@@ -313,6 +314,18 @@ function setupTransferApp(): void {
         state.textContent = error instanceof Error ? error.message : 'The room service did not open. Check the network and try again.';
         state.dataset.tone = 'error';
       }
+    };
+    area.querySelector('#make-room')?.addEventListener('click', () => void openRoom(makeRoomCode()));
+    area.querySelector('#resume-room')?.addEventListener('click', () => {
+      const input = area.querySelector<HTMLInputElement>('#resume-code')!;
+      const code = input.value.trim().toLowerCase();
+      if (!validRoomCode(code)) {
+        hooks().onState('Enter all six words from the previous room.', 'error');
+        input.setAttribute('aria-invalid', 'true');
+        return;
+      }
+      input.removeAttribute('aria-invalid');
+      void openRoom(code);
     });
     area.querySelector('#sender-relay')?.addEventListener('click', async () => {
       try {

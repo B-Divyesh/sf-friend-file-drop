@@ -154,10 +154,14 @@ test('saved direct chunks resume at the verified offset @claim:resumable-transfe
       request.onerror = () => reject(request.error);
     });
     const tx = db.transaction('partial-chunks', 'readwrite');
-    tx.objectStore('partial-chunks').put({ key: `${roomCode}:${id}:0`, roomCode, fileId: id, offset: 0, data: new Uint8Array(bytes).buffer });
+    const data = new Uint8Array(bytes).buffer;
+    const digest = await crypto.subtle.digest('SHA-256', data);
+    const chunkHash = [...new Uint8Array(digest)].map((part) => part.toString(16).padStart(2, '0')).join('');
+    tx.objectStore('partial-chunks').put({ key: `${roomCode}:${id}:0`, roomCode, fileId: id, offset: 0, data, hash: chunkHash });
     await new Promise<void>((resolve) => { tx.oncomplete = () => resolve(); });
     db.close();
   }, { code, id: hash, bytes: [...data.subarray(0, 32 * 1024)] });
+  await receiver.reload();
   await receiver.getByRole('tab', { name: 'Receive files' }).click();
   await receiver.locator('#room-code').fill(code);
   await receiver.getByRole('button', { name: 'Join this room' }).click();

@@ -241,6 +241,7 @@ export class DirectTransfer {
       const blob = new Blob(entry.chunks, { type: entry.manifest.type });
       const hash = await hashFile(blob);
       if (hash !== entry.manifest.hash) {
+        await clearPartialChunks(this.roomCode, message.id);
         this.hooks.onState(`${entry.manifest.name} did not match its hash. Rejoin to retry it.`, 'error');
         return;
       }

@@ -110,8 +110,8 @@ textarea:focus { border-color: var(--teal); }
 .room-input { width: 100%; min-height: 48px; padding: .65rem .75rem; border: 2px solid var(--rule); background: var(--paper); color: var(--ink); font: .9rem var(--mono); }
 .room-input:focus { border-color: var(--teal); }
 .room-input[aria-invalid="true"] { border-color: var(--coral); }
-.relay-choice { margin-top: 1rem; padding: .65rem 0; border-top: 1px solid var(--rule); }
-.relay-choice summary { min-height: 44px; padding: .55rem 0; color: var(--teal-dark); font-weight: 750; cursor: pointer; }
+.relay-choice, .resume-room { margin-top: 1rem; padding: .65rem 0; border-top: 1px solid var(--rule); }
+.relay-choice summary, .resume-room summary { min-height: 44px; padding: .55rem 0; color: var(--teal-dark); font-weight: 750; cursor: pointer; }
 .relay-choice p { font-size: .82rem; }
 .room-label, .demo-code { padding: .75rem; margin: 1rem 0; background: var(--yellow); transform: rotate(-.6deg); }
 .room-label span, .room-label strong, .demo-code span, .demo-code strong { display: block; }
