@@ -6,6 +6,7 @@ const roomsHandler = require('./rooms');
 const filesHandler = require('./files');
 const healthHandler = require('./health');
 const store = require('./lib/store');
+const persistent = require('./lib/persistent');
 
 const code = 'field-finch-fog-globe-green-harbor';
 const fileId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
@@ -32,6 +33,33 @@ test('room API signals, requires dual relay consent, relays, and clears bytes', 
   assert.equal(response.body.toString(), 'file');
   await call(roomsHandler, { code }, { method: 'POST', body: { action: 'receipt', receipt: { id: 'done', files: [] } } });
   assert.equal(store.rooms.get(code).files.size, 0);
+});
+
+test('concurrent relay-consent updates retain both choices @regression:durable-room-consent', async () => {
+  store.rooms.clear();
+  await call(roomsHandler, { code }, { method: 'POST', body: { action: 'create', offer: { type: 'offer', sdp: 'local' } } });
+  const [sender, receiver] = await Promise.all([
+    call(roomsHandler, { code }, { method: 'POST', body: { action: 'relay-consent', role: 'sender' } }),
+    call(roomsHandler, { code }, { method: 'POST', body: { action: 'relay-consent', role: 'receiver' } })
+  ]);
+  assert.equal(sender.status, 200);
+  assert.equal(receiver.status, 200);
+  const final = await call(roomsHandler, { code }, { method: 'GET' });
+  assert.equal(final.status, 200);
+  assert.deepEqual(final.body.relay, { sender: true, receiver: true, ready: true });
+});
+
+test('configured production refuses per-instance memory rooms @regression:durable-room-required', async () => {
+  const previous = process.env.FRIEND_FILE_DROP_REQUIRE_DURABLE_STORAGE;
+  delete process.env.FRIEND_FILE_DROP_STORAGE;
+  delete process.env.AzureWebJobsStorage;
+  process.env.FRIEND_FILE_DROP_REQUIRE_DURABLE_STORAGE = 'true';
+  try {
+    await assert.rejects(() => persistent.getRoom(code), { statusCode: 503, message: /Durable room storage is unavailable/ });
+  } finally {
+    if (previous === undefined) delete process.env.FRIEND_FILE_DROP_REQUIRE_DURABLE_STORAGE;
+    else process.env.FRIEND_FILE_DROP_REQUIRE_DURABLE_STORAGE = previous;
+  }
 });
 
 test('room and relay endpoints rate limit a server-derived identity and always send Retry-After', async () => {

@@ -48,7 +48,7 @@ test('deployed six-word room completes a direct browser transfer', async ({ brow
   await receiverContext.close();
 });
 
-test('deployed relay transfers only after both browsers opt in', async ({ browser }) => {
+test('deployed relay keeps a room across instances and transfers only after both browsers opt in @regression:live-durable-relay', async ({ browser }) => {
   const senderContext = await browser.newContext();
   const receiverContext = await browser.newContext();
   const sender = await senderContext.newPage();
