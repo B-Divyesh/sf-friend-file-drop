@@ -1,57 +1,63 @@
-# Friend File Drop v1 handoff
+# Friend File Drop repair handoff
 
-## Independent verification update — 2026-08-28 — FAIL
+## Status
 
-**Candidate:** `ac70e079e4b5bd73a9583e58ac3de1bd7360a625`
-**Live URL:** <https://friend-file-drop.sociobot.in>
+Release blockers from verifier report `37080fd73138bcbac4d961b4772f86d30d8dce09` are repaired. The PWA is deployed at <https://friend-file-drop.sociobot.in> from `main`. The latest deployed app bundle matches the local production bundle byte for byte.
 
-The candidate is deployed successfully and its live JS, CSS, and hero asset are byte-identical to a fresh local production build. All six required claim commands and the full 12-test suite passed; direct two-browser transfer, demo isolation, offline reload, live axe, mobile/keyboard, and Lighthouse checks also passed.
+Artifact class remains `pwa-offline`. The frontend and offline shell remain static. Azure Static Web Apps now deploys the repository's narrow managed API for short-lived signaling and the optional relay.
 
-It is nevertheless **not accepted**. See [`.factory/verification.md`](verification.md) for exact evidence and reproduction. Release blockers are: (1) the product has no real six-word room handoff, resumable same-LAN transfer, or direct-failure opt-in relay path required by the brief; (2) material privacy/storage/network claims are absent from `claims.json` and have no claim test; and (3) live hashed assets use only `max-age=30`, not immutable long-lived caching. A styled unknown-route screen also returns HTTP 200 instead of a real 404 status.
+## What changed
 
-No product code was changed during independent verification; only this handoff and the verification report were added.
+- Replaced manual SDP pairing notes with a six-word room flow. The sender shares only the displayed code; the receiver enters it to connect.
+- Added a same-origin managed room API with durable managed blob state, 15-minute expiry, input validation, a 90-request-per-minute IP limit, and no-store responses.
+- Added an explicit relay choice on both screens. Relay transfer starts only after both people opt in, accepts at most 25 MB per room, and clears file bytes when the receiver posts its receipt.
+- Added IndexedDB checkpoints for direct-transfer chunks. Each stored chunk has its own SHA-256 digest; rejoining the same room resumes from the contiguous verified offset. Senders can reopen their previous room code.
+- Expanded `.factory/claims.json` to 13 claims. Each visitor-facing privacy, storage, room, relay, resume, offline, account, price, and receipt promise now points to one tagged regression test.
+- Added long-lived immutable caching for `/assets/*`. HTML and the service worker remain revalidated.
+- Replaced the catch-all SPA fallback with explicit app-route rewrites. Unknown paths now return the designed `404.html` with HTTP 404.
+- Added accessible tab arrow-key behavior, designed focus, form errors, 44 px mobile targets, and a full semantic static 404 page.
+- Updated README, demo documentation, privacy/terms copy, copy audit, version, and service-worker cache version.
 
-## What was built
+## Verification evidence — 2026-08-28
 
-- A responsive, notebook-style landing page and working transfer bench.
-- Direct WebRTC file transfer between two browsers, using two copyable pairing notes and a six-word room code.
-- File manifests with names, sizes, MIME types, and SHA-256 hashes before sending.
-- Chunked, ordered data-channel transfer with progress, receiver-side hash verification, file downloads, and matching sender/receiver receipts.
-- Local IndexedDB receipt history with JSON export and import.
-- A one-click `/demo` sandbox with three realistic sample files, progress, a receipt, reset, and isolated `demo:` session storage.
-- PWA manifest, install icons, versioned service worker cache, offline fallback, and update notice.
-- Home, demo, privacy, terms, styled 404, sitemap, robots, social metadata, and Azure Static Web Apps headers/fallback config.
-- An original generated notebook illustration and derived WebP/social assets. Source, prompt, and provenance are in `assets/src/` and `.factory/design.md`.
-
-## How to run
+Clean local gate:
 
 ```sh
-npm install
-npm run dev
+npm ci
 npm test
+npm run lint
 npm run build
+npm audit --omit=dev --audit-level=high
 ```
 
-The deploy output is `dist/`. Its root contains `index.html`.
+- API/config unit and integration tests: 5 passed.
+- Local Playwright: 17 passed; 8 live-only tests skipped unless `LIVE_URL` is set.
+- TypeScript/lint: passed.
+- Production build: `dist/index.html` exists; JS 35.23 KB raw / 11.57 KB gzip; CSS 17.02 KB raw / 4.81 KB gzip; hero WebP 58 KB.
+- Dependency audit: 0 vulnerabilities.
+- Claims exercised: all 13 entries in `.factory/claims.json`, including dual-consent relay, verified resume offset, and local receipt storage.
+- Browser coverage: desktop Chromium, 390 × 844 mobile, keyboard skip link, arrow-key tabs, 44 px targets, reduced motion, offline reload, and axe checks.
 
-## Verification on 2026-08-28
+Live gate:
 
-- `npm test`: 12/12 Playwright tests passed in Chromium.
-- Claim coverage: demo receipt, no account step, free use, no third-party demo traffic, offline reload, and a real two-browser WebRTC file transfer.
-- Accessibility: axe found no serious or critical issues on `/`, `/demo`, `/privacy`, or `/terms`.
-- Mobile: 390 × 844 layout passed without horizontal overflow; the headline and demo action remained visible.
-- Route check: every main route has one `h1`, one `main`, a route title, and working keyboard navigation. The styled 404 route passed.
-- Production bundle: 9.75 KB initial JavaScript gzip and 4.70 KB CSS gzip. Hero WebP: 58 KB.
-- Lighthouse mobile: Performance 100, Accessibility 100, Best Practices 100, SEO 100.
-- Lighthouse timings: FCP 0.9 s, LCP 1.7 s, TBT 0 ms, CLS 0, Speed Index 0.9 s.
-- Factory URL verification: HTTP 200, `lang=en`, one `h1`, one `main`, no missing image alt text, and no page or console errors.
-- `npm audit`: no known vulnerabilities.
+```sh
+LIVE_URL=https://friend-file-drop.sociobot.in npx playwright test tests/live.spec.ts
+VERIFY_NODE_MODULES="$PWD/node_modules" /opt/fleet/lib/verify-url.sh https://friend-file-drop.sociobot.in /tmp/friend-file-drop-repair-final
+```
 
-## Known limits
+- Live Playwright: 8 passed. This includes all routes, real HTTP 404, axe with 0 serious/critical findings, live offline reload, a real two-browser six-word direct transfer, and a real dual-opt-in relay transfer.
+- URL verifier: 701 ms load; no console/page errors; title, `lang=en`, one h1, main, alt text, and button labels passed.
+- Lighthouse mobile: Performance 100, Accessibility 100, Best Practices 100, SEO 100; FCP 1.0 s, LCP 1.3 s, TBT 20 ms, CLS 0.
+- `/assets/index-CmkZGAgb.js`: `Cache-Control: public, max-age=31536000, immutable`.
+- `/missing-page`: HTTP 404 with the styled notebook page.
+- API invalid-room response: HTTP 400, JSON, `Cache-Control: no-store`.
+- Local/live JS SHA-256: `58eff10b537bcc8b9b9c753052f741805ed3f77a5f2ad0a62209fc5dee0aa6cc` on both copies.
+- Deployment: Azure Static Web Apps production deployment `bdc7ce90-8b57-46fc-bd57-b9e6918ebf84` succeeded; custom domain and TLS are ready.
+- Evidence files: `/tmp/friend-file-drop-repair-final/verify.json`, desktop/mobile screenshots, and `/tmp/friend-file-drop-repair-final/lighthouse.json`.
 
-- A static site cannot run a shared six-word signaling service. The room code identifies the session, but users must exchange two longer pairing notes through an existing conversation.
-- This v1 intentionally has no STUN or TURN service. It sends no metadata to a relay, but direct pairing can fail across restrictive routers. Same-LAN transfer is the dependable path.
-- The reliable WebRTC channel retries short interruptions while both pages remain open. A closed or reloaded page cannot resume a partial file.
-- Incoming files are assembled in browser memory before download. This v1 targets a few personal files, not multi-gigabyte archives.
+## Operations and known limits
 
-These limits are stated in the product and README. The next backend iteration should add a short-lived, rate-limited signaling service keyed by the six-word code, followed by an explicit opt-in relay with a metadata disclosure. Durable partial-file resume should use OPFS and verified chunk offsets.
+- Direct WebRTC is preferred. On restrictive networks, both people must read the disclosure and choose the relay.
+- Relay rooms are deliberately temporary and limited to 25 MB total. This keeps the fallback useful for personal files while limiting abuse and temporary storage.
+- A transfer needs another reachable browser and a network. The installed shell, demo, and saved receipts remain available offline.
+- Keep the original file until both sides show a receipt. Local receipts are records, not file backups.

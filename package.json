@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "postinstall": "npm ci --prefix api --omit=dev",
     "dev": "vite --host 0.0.0.0",
     "typecheck": "tsc --noEmit",
     "lint": "tsc --noEmit",
