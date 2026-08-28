@@ -52,7 +52,7 @@ VERIFY_NODE_MODULES="$PWD/node_modules" /opt/fleet/lib/verify-url.sh https://fri
 - `/missing-page`: HTTP 404 with the styled notebook page.
 - API invalid-room response: HTTP 400, JSON, `Cache-Control: no-store`.
 - Local/live JS SHA-256: `58eff10b537bcc8b9b9c753052f741805ed3f77a5f2ad0a62209fc5dee0aa6cc` on both copies.
-- Deployment: Azure Static Web Apps production deployment `bdc7ce90-8b57-46fc-bd57-b9e6918ebf84` succeeded; custom domain and TLS are ready.
+- Deployment: Azure Static Web Apps production deployment `4b1a2c2f-c468-46d3-abc6-21a15714e19b` succeeded; custom domain and TLS are ready.
 - Evidence files: `/tmp/friend-file-drop-repair-final/verify.json`, desktop/mobile screenshots, and `/tmp/friend-file-drop-repair-final/lighthouse.json`.
 
 ## Operations and known limits
