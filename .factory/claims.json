@@ -1,0 +1,44 @@
+[
+  {
+    "id": "demo-receipt",
+    "claim": "The sample transfer finishes with three matching file hashes and a receipt.",
+    "where": "demo manifest and receipt",
+    "test": "npm test -- --grep @claim:demo-receipt",
+    "sandbox": "fresh browser context at /demo; run bundled sample transfer"
+  },
+  {
+    "id": "no-account",
+    "claim": "No account or app is needed.",
+    "where": "landing facts",
+    "test": "npm test -- --grep @claim:no-account",
+    "sandbox": "fresh browser context at /demo; assert the transfer is ready without account fields"
+  },
+  {
+    "id": "free-use",
+    "claim": "Friend File Drop is free to use.",
+    "where": "landing facts and README",
+    "test": "npm test -- --grep @claim:free-use",
+    "sandbox": "fresh browser context; assert free copy and no payment action"
+  },
+  {
+    "id": "no-third-party",
+    "claim": "The demo sends no data to third parties.",
+    "where": "demo banner, privacy page, README",
+    "test": "npm test -- --grep @claim:no-third-party",
+    "sandbox": "fresh browser context; record the whole demo flow and assert every request is same-origin"
+  },
+  {
+    "id": "offline-reload",
+    "claim": "The installed app works offline after the first visit.",
+    "where": "README",
+    "test": "npm test -- --grep @claim:offline-reload",
+    "sandbox": "fresh browser context at /demo; wait for the service worker, reload, go offline, and reload again"
+  },
+  {
+    "id": "direct-transfer",
+    "claim": "Files move directly between connected browsers and both sides get a hash receipt.",
+    "where": "landing facts, how it works, README",
+    "test": "npm test -- --grep @claim:direct-transfer",
+    "sandbox": "two fresh browser contexts; exchange pairing notes, transfer a fixture, verify download and receipts"
+  }
+]
