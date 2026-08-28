@@ -1,0 +1,9 @@
+{
+  "slug": "friend-file-drop",
+  "title": "Friend File Drop",
+  "artifact_class": "pwa-offline",
+  "summary": "Send private files between mixed devices and get a clear receipt.",
+  "smallest_useful_product": "A browser-based WebRTC transfer room with a six-word code, explicit file manifest and hash, resumable same-LAN fallback, and a sender/receiver completion receipt.",
+  "monetization": "free",
+  "constraints": "Use an opt-in relay only when direct WebRTC fails; disclose relay metadata; scan neither content nor contacts; rate-limit abuse."
+}
