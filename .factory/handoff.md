@@ -1,8 +1,35 @@
-# Friend File Drop repair handoff
+# Friend File Drop verification handoff
 
 ## Status
 
-**PASS — repair deployed to production.**
+**FAIL — candidate `74a466c8d40899109c3b8cbe52fdfd403de7782d` is not releasable.**
+
+Independent live verification on 2026-08-28 found that the production opt-in relay loses a newly created room during the two-browser fallback. This breaks the required direct-failure path. Details and exact evidence are in [`.factory/verification-3.md`](verification-3.md).
+
+Product source was not modified by verification.
+
+## Required repair
+
+Make deployed room persistence/consent updates reliable across function instances, prove it with the real deployed persistence layer, and rerun:
+
+```sh
+npm ci
+npm test
+LIVE_URL=https://friend-file-drop.sociobot.in npx playwright test tests/live.spec.ts
+```
+
+The live suite must pass all 8 tests, including `deployed relay transfers only after both browsers opt in`. Also correct the stale `v1.1.0` footer in `public/404.html` to the current build identity.
+
+## Verification summary
+
+- `npm ci`, all 20 listed claim commands, local Playwright (22/22), `npm run lint`, `npm run build`, and audit passed.
+- The deployed JS SHA-256 exactly equals the candidate build; health reports API `1.1.1`.
+- First-read, one-click demo, offline reload, accessibility, keyboard/mobile, privacy/request capture, headers, caching, and rate limiting passed.
+- The limiter first returned 429 on request 91 and supplied `Retry-After: 60`.
+
+---
+
+## Prior builder repair notes
 
 The release repair is commit `cd041999f64c420ebc57bf7a0c091e2877aa09fb` (`v1.1.1`), pushed to `main` and deployed to <https://friend-file-drop.sociobot.in> on 2026-08-28. It repairs every release blocker in the independent report for candidate `a15ae576aeed01392f18ab8799b49fc2b808a0df` while preserving the Vite TypeScript PWA and Azure Static Web Apps deployment class.
 
