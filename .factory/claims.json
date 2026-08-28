@@ -9,36 +9,85 @@
   {
     "id": "no-account",
     "claim": "No account or app is needed.",
-    "where": "landing facts",
+    "where": "landing facts and README",
     "test": "npm test -- --grep @claim:no-account",
-    "sandbox": "fresh browser context at /demo; assert the transfer is ready without account fields"
+    "sandbox": "fresh browser context at /demo; assert transfer is ready without identity fields"
   },
   {
     "id": "free-use",
     "claim": "Friend File Drop is free to use.",
-    "where": "landing facts and README",
+    "where": "landing facts, terms, and README",
     "test": "npm test -- --grep @claim:free-use",
     "sandbox": "fresh browser context; assert free copy and no payment action"
   },
   {
-    "id": "no-third-party",
-    "claim": "The demo sends no data to third parties.",
-    "where": "demo banner, privacy page, README",
-    "test": "npm test -- --grep @claim:no-third-party",
-    "sandbox": "fresh browser context; record the whole demo flow and assert every request is same-origin"
+    "id": "demo-isolation",
+    "claim": "The demo uses only its session storage namespace and sends no data to third parties.",
+    "where": "demo banner and demo documentation",
+    "test": "npm test -- --grep @claim:demo-isolation",
+    "sandbox": "fresh browser context; run demo and inspect all requests, sessionStorage, and IndexedDB"
   },
   {
     "id": "offline-reload",
     "claim": "The installed app works offline after the first visit.",
     "where": "README",
     "test": "npm test -- --grep @claim:offline-reload",
-    "sandbox": "fresh browser context at /demo; wait for the service worker, reload, go offline, and reload again"
+    "sandbox": "fresh browser context at /demo; wait for service worker control, go offline, and reload"
+  },
+  {
+    "id": "six-word-room",
+    "claim": "A receiver joins a transfer room with the sender's six-word code.",
+    "where": "transfer workbench, how it works, and README",
+    "test": "npm test -- --grep @claim:six-word-room",
+    "sandbox": "two fresh browser contexts and an isolated room-service fixture; exchange only the displayed six-word code"
+  },
+  {
+    "id": "room-expiry",
+    "claim": "Room connection details expire after 15 minutes.",
+    "where": "transfer workbench, privacy page, and README",
+    "test": "node --test --test-name-pattern=@claim:room-expiry api/lib/store.test.js",
+    "sandbox": "isolated room store with an injected clock; assert present at 14:59.999 and absent at 15:00"
   },
   {
     "id": "direct-transfer",
     "claim": "Files move directly between connected browsers and both sides get a hash receipt.",
-    "where": "landing facts, how it works, README",
+    "where": "landing facts, how it works, and README",
     "test": "npm test -- --grep @claim:direct-transfer",
-    "sandbox": "two fresh browser contexts; exchange pairing notes, transfer a fixture, verify download and receipts"
+    "sandbox": "two fresh browser contexts; join by room code, transfer a fixture, verify download and both receipts"
+  },
+  {
+    "id": "resumable-transfer",
+    "claim": "A rejoined direct transfer resumes from chunks saved in IndexedDB.",
+    "where": "transfer status, privacy page, and README",
+    "test": "npm test -- --grep @claim:resumable-transfer",
+    "sandbox": "seed one verified 32 KB chunk in receiver IndexedDB, rejoin the same room, and assert resume at that offset"
+  },
+  {
+    "id": "local-receipts",
+    "claim": "Finished receipts are stored in this browser's IndexedDB.",
+    "where": "privacy page and README",
+    "test": "npm test -- --grep @claim:local-receipts",
+    "sandbox": "fresh sender context; finish a direct transfer and read the receipt object store"
+  },
+  {
+    "id": "opt-in-relay",
+    "claim": "The relay starts only after both people choose it and removes file bytes after the receipt.",
+    "where": "transfer disclosure, privacy page, and README",
+    "test": "npm test -- --grep @claim:opt-in-relay",
+    "sandbox": "two fresh contexts with an isolated relay fixture; assert one consent waits, two transfer, and receipt clears bytes"
+  },
+  {
+    "id": "relay-cap",
+    "claim": "The relay limits each room to 25 MB.",
+    "where": "transfer disclosure, privacy page, and README",
+    "test": "node --test --test-name-pattern=@claim:relay-cap api/lib/store.test.js",
+    "sandbox": "isolated relay store; fill the exact byte cap and assert the next byte is rejected"
+  },
+  {
+    "id": "privacy-boundaries",
+    "claim": "The app has no analytics, advertising, third-party runtime scripts, or contact access.",
+    "where": "privacy page and README",
+    "test": "npm test -- --grep @claim:privacy-boundaries",
+    "sandbox": "fresh privacy-page context; inspect all requests, loaded script/style origins, and contact inputs"
   }
 ]

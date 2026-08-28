@@ -4,7 +4,7 @@ Send private files between mixed devices and get a clear receipt.
 
 Friend File Drop is a free, account-free browser tool for friends and families. It sends files over a direct WebRTC data channel. Both people get the file manifest, SHA-256 hashes, and finish time.
 
-The static v1 uses two pairing notes for WebRTC signaling. Send those notes through a conversation you already share. The notes are connection details, not file links. Both browsers must stay open. Transfers work on a reachable direct path, including the same local network; this version has no relay.
+The sender shares one six-word room code. A 15-minute signaling room connects the browsers. If the direct path fails, both people can choose a temporary 25 MB relay. Direct-transfer chunks are checkpointed in IndexedDB, so rejoining the same room resumes at the saved offset.
 
 ## Try the sandbox
 
@@ -15,30 +15,31 @@ Open `/demo` or `http://localhost:5173/demo`, then choose **Send sample files**.
 Requires Node.js 20 or newer.
 
 ```sh
-npm install
+npm ci
 npm run dev
 ```
 
-Open `http://localhost:5173`. To test a real transfer, open the page in two current browsers, choose opposite roles, and exchange the two pairing notes.
+Open `http://localhost:5173`. To test a real transfer, run an Azure Functions-compatible API from `api/`, then open the page in two current browsers and share the six-word code.
 
 ## Test and build
 
 ```sh
 npm test
+npm run lint
 npm run build
 ```
 
-`npm test` builds the app and runs the Playwright claim, accessibility, offline, transfer, and mobile checks. The production output is `dist/`, with `dist/index.html` at its root.
+`npm test` runs API unit tests, builds the app, and runs Playwright claim, accessibility, offline, transfer, relay, resume, and mobile checks. The production output is `dist/`, with `dist/index.html` at its root.
 
 ## Privacy and offline use
 
-The app loads no third-party runtime scripts, fonts, or analytics. Files travel only through the paired WebRTC connection. Receipts stay in local IndexedDB. The service worker makes the installed app available offline after the first visit; starting a transfer still requires two reachable browsers.
+The app has no analytics, advertising, third-party runtime scripts, or contact access. Direct files use WebRTC. Both people must opt in before relay bytes are accepted. Receipts and resumable direct-transfer chunks use local IndexedDB. The installed shell works offline after the first visit; starting a transfer requires a network and another browser.
 
 See [`/privacy`](https://friend-file-drop.sociobot.in/privacy) and [`/terms`](https://friend-file-drop.sociobot.in/terms) for the plain-language policies.
 
 ## Deploy
 
-Deploy the contents of `dist/` as a static site. `public/staticwebapp.config.json` provides SPA fallback, the styled 404 response, security headers, and asset handling for Azure Static Web Apps. Deployment, DNS, and billing are outside this repository.
+Deploy `dist/` with the managed functions in `api/` to Azure Static Web Apps. `public/staticwebapp.config.json` provides explicit SPA routes, a real styled 404 response, security headers, and immutable caching for fingerprinted assets. Deployment, DNS, and billing stay outside this repository.
 
 ## Project notes
 

@@ -1,6 +1,6 @@
 import './styles.css';
 import { getReceipts, saveReceipt, type SavedReceipt } from './db';
-import { buildManifest, DirectTransfer, makeRoomCode, type FileManifest } from './transfer';
+import { buildManifest, DirectTransfer, makeRoomCode, validRoomCode, type FileManifest } from './transfer';
 
 type Route = 'home' | 'demo' | 'privacy' | 'terms' | 'not-found';
 
@@ -56,7 +56,7 @@ function footer(): string {
   return `<footer class="site-footer">
     <p>Send private files and keep a finished receipt.</p>
     <nav aria-label="Footer navigation"><a href="/privacy" data-link>Privacy</a><a href="/terms" data-link>Terms</a></nav>
-    <p>Built by Param Factory · v1.0.0 · <span title="Generated with the factory image model">Original generated art</span></p>
+    <p>Built by Param Factory · v1.1.0 · <span title="Generated with the factory image model">Original generated art</span></p>
   </footer>`;
 }
 
@@ -95,7 +95,7 @@ function homePage(): string {
       </figure>
     </section>
     <section class="workbench ruled" id="drop" aria-labelledby="workbench-title">
-      <div class="section-intro"><p class="margin-number">01</p><div><h2 id="workbench-title">Prepare a direct transfer</h2><p>Choose whether this device sends or receives. Pairing notes connect the browsers without an account.</p></div></div>
+      <div class="section-intro"><p class="margin-number">01</p><div><h2 id="workbench-title">Prepare a private transfer</h2><p>Choose whether this device sends or receives. The receiver joins with the six-word room code.</p></div></div>
       <div id="transfer-app" class="transfer-app"></div>
       <div id="receipt-history"></div>
     </section>
@@ -103,12 +103,12 @@ function homePage(): string {
       <div class="section-intro"><p class="margin-number">02</p><div><h2 id="how-title">How the files cross</h2><p>The two browsers agree on one private path.</p></div></div>
       <ol class="lab-steps">
         <li><span>1</span><div><h3>Choose the files</h3><p>The sender sees every name, size, and SHA-256 hash before sending.</p></div></li>
-        <li><span>2</span><div><h3>Pair both browsers</h3><p>Exchange two pairing notes in any conversation you already share.</p></div></li>
+        <li><span>2</span><div><h3>Share six words</h3><p>The receiver enters the room code. Short-lived signaling opens a direct browser path.</p></div></li>
         <li><span>3</span><div><h3>Check the receipt</h3><p>Both browsers record the names, hashes, and finish time.</p></div></li>
       </ol>
     </section>
     <section class="limits-section" aria-labelledby="limits-title">
-      <div class="torn-note"><p class="eyebrow">Margin note</p><h2 id="limits-title">What this tool does not do</h2><ul><li>It does not store files in a cloud drive.</li><li>It does not inspect files or contacts.</li><li>It does not use a relay in this version.</li><li>Both browsers must stay open during a transfer.</li></ul></div>
+      <div class="torn-note"><p class="eyebrow">Margin note</p><h2 id="limits-title">What the room service handles</h2><ul><li>Room connection details expire after 15 minutes.</li><li>The app never asks for your contacts.</li><li>Files go direct unless both people choose the relay.</li><li>The relay accepts up to 25 MB and removes file bytes after the receipt.</li></ul></div>
     </section>
   </main>`);
 }
@@ -129,8 +129,8 @@ function demoPage(): string {
 }
 
 function legalPage(kind: 'privacy' | 'terms'): string {
-  const privacy = `<article class="legal-sheet"><p class="eyebrow">Plain-language policy · 28 August 2026</p><h1 tabindex="-1">Your files stay between the browsers</h1><p class="lead">Friend File Drop uses local browser features to connect devices and record receipts.</p><h2>What leaves your browser</h2><p>The site sends no file contents, contacts, analytics, or receipt data to us. The two paired browsers exchange file names, sizes, hashes, and contents.</p><h2>What stays on this device</h2><p>Finished receipts are stored in this browser using IndexedDB. Demo receipts use a separate session-only key. Clear site data to remove them.</p><h2>Network details</h2><p>WebRTC can reveal IP addresses to the paired browser. This version uses no relay server. The pairing note contains connection details, so share it only with the intended person.</p><h2>Contact</h2><p>Privacy questions can be sent to <a href="mailto:privacy@sociobot.in">privacy@sociobot.in</a>.</p></article>`;
-  const terms = `<article class="legal-sheet"><p class="eyebrow">Terms · 28 August 2026</p><h1 tabindex="-1">Use Friend File Drop with care</h1><p class="lead">You may use this free tool to send files you have the right to share.</p><h2>Your responsibility</h2><p>Do not send illegal, harmful, or unwanted material. Confirm the recipient before exchanging pairing notes.</p><h2>Availability</h2><p>The tool is provided as-is. Browser, device, and network limits can interrupt a transfer. Keep the original file until the receipt appears.</p><h2>No file custody</h2><p>We do not receive or store transferred files. Local receipts are not a backup of file contents.</p><h2>Contact</h2><p>Terms questions can be sent to <a href="mailto:hello@sociobot.in">hello@sociobot.in</a>.</p></article>`;
+  const privacy = `<article class="legal-sheet"><p class="eyebrow">Plain-language policy · 28 August 2026</p><h1 tabindex="-1">Know what each transfer shares</h1><p class="lead">Friend File Drop uses a short-lived room service to connect two browsers.</p><h2>Direct transfers</h2><p>The room service receives the six-word code, network address, and WebRTC connection details. File names, hashes, contents, and receipts travel through the paired WebRTC connection.</p><h2>Relay transfers</h2><p>The relay is used only after both people choose it. It then receives the file manifest and contents over HTTPS. It limits each room to 25 MB and removes file bytes after the receipt or room expiry.</p><h2>What stays on this device</h2><p>Finished receipts use this browser's IndexedDB. Incomplete direct-transfer chunks stay there for resume. Demo receipts use a separate session-only key.</p><h2>Tracking and contacts</h2><p>The app has no analytics, advertising, third-party runtime scripts, or contact access.</p><h2>Contact</h2><p>Privacy questions can be sent to <a href="mailto:privacy@sociobot.in">privacy@sociobot.in</a>.</p></article>`;
+  const terms = `<article class="legal-sheet"><p class="eyebrow">Terms · 28 August 2026</p><h1 tabindex="-1">Use Friend File Drop with care</h1><p class="lead">You may use this free tool to send files you have the right to share.</p><h2>Your responsibility</h2><p>Do not send illegal, harmful, or unwanted material. Confirm the six words with your intended recipient.</p><h2>Availability</h2><p>The tool is provided as-is. Browser, device, and network limits can interrupt a transfer. Keep the original file until the receipt appears.</p><h2>Temporary relay custody</h2><p>If both people choose the relay, it temporarily holds file bytes. A local receipt is not a backup of file contents.</p><h2>Contact</h2><p>Terms questions can be sent to <a href="mailto:hello@sociobot.in">hello@sociobot.in</a>.</p></article>`;
   return shell(`<main id="main" class="legal-main">${kind === 'privacy' ? privacy : terms}</main>`);
 }
 
@@ -220,9 +220,16 @@ function setupTransferApp(): void {
   let mode: 'send' | 'receive' = 'send';
 
   const start = () => {
-    root.innerHTML = `<div class="mode-tabs" role="tablist" aria-label="This device will"><button id="send-tab" role="tab" aria-selected="${mode === 'send'}" type="button">Send files</button><button id="receive-tab" role="tab" aria-selected="${mode === 'receive'}" type="button">Receive files</button></div><div id="mode-panel" role="tabpanel"></div>`;
-    root.querySelector('#send-tab')?.addEventListener('click', () => { mode = 'send'; start(); renderSender(); });
-    root.querySelector('#receive-tab')?.addEventListener('click', () => { mode = 'receive'; start(); renderReceiver(); });
+    root.innerHTML = `<div class="mode-tabs" role="tablist" aria-label="This device will"><button id="send-tab" role="tab" aria-controls="mode-panel" aria-selected="${mode === 'send'}" tabindex="${mode === 'send' ? '0' : '-1'}" type="button">Send files</button><button id="receive-tab" role="tab" aria-controls="mode-panel" aria-selected="${mode === 'receive'}" tabindex="${mode === 'receive' ? '0' : '-1'}" type="button">Receive files</button></div><div id="mode-panel" role="tabpanel" aria-labelledby="${mode}-tab"></div>`;
+    const chooseMode = (next: 'send' | 'receive') => { mode = next; start(); root.querySelector<HTMLButtonElement>(`#${next}-tab`)?.focus(); };
+    root.querySelector('#send-tab')?.addEventListener('click', () => chooseMode('send'));
+    root.querySelector('#receive-tab')?.addEventListener('click', () => chooseMode('receive'));
+    root.querySelector('.mode-tabs')?.addEventListener('keydown', (event) => {
+      if (event instanceof KeyboardEvent && ['ArrowLeft', 'ArrowRight'].includes(event.key)) {
+        event.preventDefault();
+        chooseMode(mode === 'send' ? 'receive' : 'send');
+      }
+    });
     mode === 'send' ? renderSender() : renderReceiver();
   };
 
@@ -290,34 +297,28 @@ function setupTransferApp(): void {
   function renderPairing(): void {
     const area = root!.querySelector<HTMLDivElement>('#pairing-area')!;
     if (!files.length) { area.innerHTML = ''; return; }
-    area.innerHTML = `<section class="pair-sheet" aria-labelledby="pair-title"><h3 id="pair-title">Pair the receiving browser</h3><ol class="pair-steps"><li><button class="button primary" type="button" id="make-room">Make a six-word room</button><div id="offer-box"></div></li><li><label for="answer-note">Paste the receiver's answer note</label><textarea id="answer-note" rows="4" spellcheck="false"></textarea><button class="button secondary" type="button" id="accept-answer">Connect this browser</button></li><li><button class="button primary" type="button" id="send-now" disabled>Send ${files.length} file${files.length === 1 ? '' : 's'}</button><p id="real-state" class="state-note" role="status">Make a room to start pairing.</p></li></ol></section>`;
+    area.innerHTML = `<section class="pair-sheet" aria-labelledby="pair-title"><h3 id="pair-title">Pair the receiving browser</h3><ol class="pair-steps"><li><button class="button primary" type="button" id="make-room">Make a six-word room</button><div id="offer-box"></div></li><li><p>Tell the receiver the six words. This room expires after 15 minutes.</p><details class="relay-choice"><summary>Direct path not working?</summary><p>The relay receives file names, hashes, contents, IP addresses, and byte counts. It holds up to 25 MB until the receipt or room expiry.</p><button class="button secondary" type="button" id="sender-relay" disabled>Use the private relay</button></details></li><li><button class="button primary" type="button" id="send-now" disabled>Send ${files.length} file${files.length === 1 ? '' : 's'}</button><p id="real-state" class="state-note" role="status">Make a room to start pairing.</p></li></ol></section>`;
     area.querySelector('#make-room')?.addEventListener('click', async () => {
       roomCode = makeRoomCode();
       transfer = new DirectTransfer(roomCode, hooks());
       const state = area.querySelector<HTMLElement>('#real-state')!;
-      state.textContent = 'Writing the sender pairing note…';
+      state.textContent = 'Opening the short-lived room…';
       try {
-        const offer = await transfer.createOffer();
-        area.querySelector<HTMLDivElement>('#offer-box')!.innerHTML = `<div class="room-label"><span>Room code</span><strong>${roomCode}</strong></div><label for="offer-note">Sender pairing note</label><textarea id="offer-note" rows="4" readonly spellcheck="false">${offer}</textarea><button class="text-button copy-note" type="button">Copy sender note</button>`;
-        area.querySelector('.copy-note')?.addEventListener('click', async () => { await navigator.clipboard.writeText(offer); state.textContent = 'Sender note copied. Send it to the receiver.'; });
-        state.textContent = 'Send this note to the receiver. Then paste their answer below.';
-      } catch {
-        state.textContent = 'The browser could not make a WebRTC room. Use a current browser and try again.';
+        await transfer.createRoom();
+        localStorage.setItem('friend-file-drop:last-room', roomCode);
+        area.querySelector<HTMLDivElement>('#offer-box')!.innerHTML = `<div class="room-label"><span>Room code</span><strong>${roomCode}</strong></div><button class="text-button copy-code" type="button">Copy room code</button>`;
+        area.querySelector('.copy-code')?.addEventListener('click', async () => { await navigator.clipboard.writeText(roomCode); state.textContent = 'Room code copied. Send the six words to the receiver.'; });
+        area.querySelector<HTMLButtonElement>('#sender-relay')!.disabled = false;
+      } catch (error) {
+        state.textContent = error instanceof Error ? error.message : 'The room service did not open. Check the network and try again.';
         state.dataset.tone = 'error';
       }
     });
-    area.querySelector('#accept-answer')?.addEventListener('click', async () => {
-      const note = area.querySelector<HTMLTextAreaElement>('#answer-note')!.value;
-      const state = area.querySelector<HTMLElement>('#real-state')!;
+    area.querySelector('#sender-relay')?.addEventListener('click', async () => {
       try {
         if (!transfer) throw new Error('Make the room first.');
-        await transfer.acceptAnswer(note);
-        state.textContent = 'Answer accepted. Waiting for the direct path…';
-        window.setTimeout(() => area.querySelector<HTMLButtonElement>('#send-now')?.toggleAttribute('disabled', !transfer?.isReady), 400);
-      } catch (error) {
-        state.textContent = `${error instanceof Error ? error.message : 'The answer note could not be read.'} Check the note and try again.`;
-        state.dataset.tone = 'error';
-      }
+        await transfer.enableRelay('sender');
+      } catch (error) { hooks().onState(error instanceof Error ? error.message : 'The relay did not open.', 'error'); }
     });
     area.querySelector('#send-now')?.addEventListener('click', async () => {
       try { await transfer?.send(files, manifests); }
@@ -327,21 +328,33 @@ function setupTransferApp(): void {
 
   function renderReceiver(): void {
     const panel = root!.querySelector<HTMLDivElement>('#mode-panel')!;
-    panel.innerHTML = `<section class="pair-sheet receive-sheet" aria-labelledby="receive-title"><h3 id="receive-title">Use the sender pairing note</h3><label for="sender-note">Paste the sender's note</label><textarea id="sender-note" rows="5" spellcheck="false"></textarea><button class="button primary" id="read-offer" type="button">Make the answer note</button><div id="answer-box"></div><p id="real-state" class="state-note" role="status">Ask the sender for their pairing note.</p></section><section class="manifest-panel received-panel"><h3>Incoming file manifest</h3><ul class="file-list compact" id="real-files"><li class="empty-state">File names and sizes appear after the browsers connect.</li></ul></section><div id="real-receipt"></div>`;
-    panel.querySelector('#read-offer')?.addEventListener('click', async () => {
-      const note = panel.querySelector<HTMLTextAreaElement>('#sender-note')!.value;
+    panel.innerHTML = `<section class="pair-sheet receive-sheet" aria-labelledby="receive-title"><h3 id="receive-title">Join the sender's room</h3><label for="room-code">Six-word room code</label><input id="room-code" class="room-input" type="text" autocomplete="off" spellcheck="false" placeholder="amber-apple-atlas-birch-blue-brisk" aria-describedby="room-help" /><p id="room-help" class="field-help">Ask the sender for the six words shown on their screen.</p><button class="button primary" id="join-room" type="button">Join this room</button><details class="relay-choice"><summary>Direct path not working?</summary><p>The relay receives file names, hashes, contents, IP addresses, and byte counts. It holds up to 25 MB until the receipt or room expiry.</p><button class="button secondary" id="receiver-relay" type="button" disabled>Use the private relay</button></details><p id="real-state" class="state-note" role="status">Enter the sender's six-word room code.</p></section><section class="manifest-panel received-panel"><h3>Incoming file manifest</h3><ul class="file-list compact" id="real-files"><li class="empty-state">File names and sizes appear after the browsers connect.</li></ul></section><div id="real-receipt"></div>`;
+    panel.querySelector('#join-room')?.addEventListener('click', async () => {
+      const input = panel.querySelector<HTMLInputElement>('#room-code')!;
+      const code = input.value.trim().toLowerCase();
       const state = panel.querySelector<HTMLElement>('#real-state')!;
-      roomCode = 'pending';
+      if (!validRoomCode(code)) {
+        state.textContent = 'Enter all six words, separated by hyphens.';
+        state.dataset.tone = 'error';
+        input.setAttribute('aria-invalid', 'true');
+        return;
+      }
+      roomCode = code;
       transfer = new DirectTransfer(roomCode, hooks());
       try {
-        const answer = await transfer.acceptOffer(note);
-        panel.querySelector<HTMLDivElement>('#answer-box')!.innerHTML = `<div class="room-label"><span>Check this room code with the sender</span><strong>${transfer.code}</strong></div><label for="receiver-answer">Receiver answer note</label><textarea id="receiver-answer" rows="5" readonly spellcheck="false">${answer}</textarea><button class="text-button copy-answer" type="button">Copy answer note</button>`;
-        panel.querySelector('.copy-answer')?.addEventListener('click', async () => { await navigator.clipboard.writeText(answer); state.textContent = 'Answer copied. Send it back to the sender.'; });
-        state.textContent = 'Send this answer note back to the sender.';
+        await transfer.joinRoom();
+        input.removeAttribute('aria-invalid');
+        panel.querySelector<HTMLButtonElement>('#receiver-relay')!.disabled = false;
       } catch (error) {
-        state.textContent = `${error instanceof Error ? error.message : 'The sender note could not be read.'} Ask for a fresh note.`;
+        state.textContent = error instanceof Error ? error.message : 'The room could not be joined. Check the code and try again.';
         state.dataset.tone = 'error';
       }
+    });
+    panel.querySelector('#receiver-relay')?.addEventListener('click', async () => {
+      try {
+        if (!transfer) throw new Error('Join the room first.');
+        await transfer.enableRelay('receiver');
+      } catch (error) { hooks().onState(error instanceof Error ? error.message : 'The relay did not open.', 'error'); }
     });
   }
 
