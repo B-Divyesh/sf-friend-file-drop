@@ -29,3 +29,8 @@ test('request bursts are rate limited', () => {
   assert.equal(store.rateLimit('test-ip', 2_000), true);
   assert.equal(store.rateLimit('test-ip', 62_000), false);
 });
+
+test('client identity never trusts caller-controlled forwarding headers', () => {
+  assert.equal(store.clientIdentity({ headers: { 'x-forwarded-for': '198.51.100.1' }, socket: { remoteAddress: '203.0.113.9' } }), 'connection:203.0.113.9');
+  assert.equal(store.clientIdentity({ headers: { 'x-azure-clientip': '192.0.2.44', 'x-forwarded-for': '198.51.100.1' } }), 'platform:192.0.2.44');
+});

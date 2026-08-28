@@ -4,10 +4,11 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const roomsHandler = require('./rooms');
 const filesHandler = require('./files');
+const healthHandler = require('./health');
 const store = require('./lib/store');
 
 const code = 'field-finch-fog-globe-green-harbor';
-const fileId = 'a'.repeat(64);
+const fileId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const call = async (handler, bindingData, req) => {
   const context = { bindingData };
   await handler(context, { headers: { 'x-forwarded-for': `integration-${Math.random()}` }, query: {}, ...req });
@@ -31,4 +32,38 @@ test('room API signals, requires dual relay consent, relays, and clears bytes', 
   assert.equal(response.body.toString(), 'file');
   await call(roomsHandler, { code }, { method: 'POST', body: { action: 'receipt', receipt: { id: 'done', files: [] } } });
   assert.equal(store.rooms.get(code).files.size, 0);
+});
+
+test('room and relay endpoints rate limit a server-derived identity and always send Retry-After', async () => {
+  store.rates.clear();
+  store.rooms.clear();
+  const socket = { remoteAddress: '203.0.113.7' };
+  let response;
+  for (let index = 0; index < store.MAX_REQUESTS_PER_MINUTE; index += 1) {
+    response = await call(roomsHandler, { code }, { method: 'GET', headers: { 'x-forwarded-for': `spoofed-${index}` }, socket });
+    assert.equal(response.status, 404);
+  }
+  response = await call(roomsHandler, { code }, { method: 'GET', headers: { 'x-forwarded-for': 'a-new-spoofed-value' }, socket });
+  assert.equal(response.status, 429);
+  assert.equal(response.headers['retry-after'], '60');
+
+  store.rates.clear();
+  for (let index = 0; index < store.MAX_REQUESTS_PER_MINUTE; index += 1) {
+    response = await call(filesHandler, { code, fileId }, { method: 'GET', headers: { 'x-forwarded-for': `spoofed-${index}` }, socket });
+    assert.equal(response.status, 404);
+  }
+  response = await call(filesHandler, { code, fileId }, { method: 'GET', headers: { 'x-forwarded-for': 'another-spoofed-value' }, socket });
+  assert.equal(response.status, 429);
+  assert.equal(response.headers['retry-after'], '60');
+});
+
+test('health endpoint identifies the deployed API build @claim:api-health', async () => {
+  const context = {};
+  await healthHandler(context);
+  assert.equal(context.res.status, 200);
+  assert.equal(context.res.headers['cache-control'], 'no-store');
+  assert.equal(context.res.body.service, 'friend-file-drop-api');
+  assert.match(context.res.body.version, /^1\.1\.1$/);
+  assert.ok(Object.hasOwn(context.res.body, 'sourceRevision'));
+  assert.ok(Object.hasOwn(context.res.body, 'deploymentId'));
 });

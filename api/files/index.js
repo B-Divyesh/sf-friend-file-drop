@@ -1,15 +1,14 @@
 'use strict';
 
-const { ROOM_PATTERN, rateLimit } = require('../lib/store');
+const { ROOM_PATTERN, FILE_ID_PATTERN, clientIdentity } = require('../lib/store');
 const persistent = require('../lib/persistent');
 
 module.exports = async function files(context, req) {
   const code = String(context.bindingData.code || '').toLowerCase();
   const fileId = String(context.bindingData.fileId || '');
-  const ip = String(req.headers['x-forwarded-for'] || req.headers['x-client-ip'] || 'unknown').split(',')[0].trim();
-  const fail = (status, error) => ({ status, headers: { 'content-type': 'application/json', 'cache-control': 'no-store' }, body: { error } });
-  if (rateLimit(ip)) { context.res = fail(429, 'Too many relay requests. Wait one minute and try again.'); return; }
-  if (!ROOM_PATTERN.test(code) || !/^[a-f0-9]{64}$/.test(fileId)) { context.res = fail(400, 'The room or file code is invalid.'); return; }
+  const fail = (status, error, extra = {}) => ({ status, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', ...extra }, body: { error } });
+  if (await persistent.rateLimit(clientIdentity(req))) { context.res = fail(429, 'Too many relay requests. Wait one minute and try again.', { 'retry-after': '60' }); return; }
+  if (!ROOM_PATTERN.test(code) || !FILE_ID_PATTERN.test(fileId)) { context.res = fail(400, 'The room or file code is invalid.'); return; }
   const room = await persistent.getRoom(code);
   if (!room) { context.res = fail(404, 'That room expired or does not exist.'); return; }
   try {

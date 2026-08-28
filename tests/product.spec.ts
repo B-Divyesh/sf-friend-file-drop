@@ -1,6 +1,5 @@
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-import { createHash } from 'node:crypto';
 import type { Page, Route } from '@playwright/test';
 
 type MockRoom = {
@@ -71,16 +70,20 @@ test('the free version has no payment action @claim:free-use', async ({ page }) 
   await expect(page.getByRole('link', { name: /buy|pay|subscribe/i })).toHaveCount(0);
 });
 
-test('demo stays isolated from real storage and third parties @claim:demo-isolation', async ({ page }) => {
+test('demo stays isolated from real storage and third parties @claim:demo-isolation @claim:demo-no-real-files', async ({ page }) => {
   const foreign: string[] = [];
+  const apiRequests: string[] = [];
   page.on('request', (request) => {
     const url = new URL(request.url());
     if (url.origin !== 'http://127.0.0.1:4173') foreign.push(request.url());
+    if (url.pathname.startsWith('/api/')) apiRequests.push(request.url());
   });
   await page.goto('/demo');
   await page.getByRole('button', { name: 'Send sample files' }).click();
   await expect(page.getByRole('heading', { name: 'Transfer finished' })).toBeVisible();
   expect(foreign).toEqual([]);
+  expect(apiRequests).toEqual([]);
+  expect(await page.locator('input[type="file"]').count()).toBe(0);
   expect(await page.evaluate(() => Object.keys(sessionStorage))).toEqual(['demo:completed']);
   expect(await page.evaluate(() => indexedDB.databases().then((items) => items.map((item) => item.name)))).not.toContain('friend-file-drop');
 });
@@ -139,8 +142,9 @@ test('saved direct chunks resume at the verified offset @claim:resumable-transfe
   await Promise.all([installRoomApi(sender, rooms), installRoomApi(receiver, rooms)]);
   await Promise.all([sender.goto('/'), receiver.goto('/')]);
   const data = Buffer.alloc(70 * 1024, 97);
-  const hash = createHash('sha256').update(data).digest('hex');
   await sender.locator('#file-input').setInputFiles({ name: 'resume.bin', mimeType: 'application/octet-stream', buffer: data });
+  const transferId = await sender.locator('#real-files .file-row').getAttribute('data-file-id');
+  expect(transferId).toMatch(/^[a-f0-9-]{36}$/);
   await sender.getByRole('button', { name: 'Make a six-word room' }).click();
   const code = (await sender.locator('.room-label strong').textContent())!;
   await receiver.evaluate(async ({ code: roomCode, id, bytes }) => {
@@ -160,7 +164,7 @@ test('saved direct chunks resume at the verified offset @claim:resumable-transfe
     tx.objectStore('partial-chunks').put({ key: `${roomCode}:${id}:0`, roomCode, fileId: id, offset: 0, data, hash: chunkHash });
     await new Promise<void>((resolve) => { tx.oncomplete = () => resolve(); });
     db.close();
-  }, { code, id: hash, bytes: [...data.subarray(0, 32 * 1024)] });
+  }, { code, id: transferId!, bytes: [...data.subarray(0, 32 * 1024)] });
   await receiver.reload();
   await receiver.getByRole('tab', { name: 'Receive files' }).click();
   await receiver.locator('#room-code').fill(code);
@@ -198,6 +202,82 @@ test('relay needs both choices and removes bytes after receipt @claim:opt-in-rel
   await expect.poll(() => rooms.get(code)?.files.size).toBe(0);
   await receiverContext.close();
   await senderContext.close();
+});
+
+test('same-content files keep separate verified rows and receipts @claim:individual-file-receipts @claim:own-files-untouched', async ({ browser }) => {
+  const senderContext = await browser.newContext();
+  const receiverContext = await browser.newContext();
+  const sender = await senderContext.newPage();
+  const receiver = await receiverContext.newPage();
+  const rooms = new Map<string, MockRoom>();
+  await Promise.all([installRoomApi(sender, rooms), installRoomApi(receiver, rooms)]);
+  await Promise.all([sender.goto('/'), receiver.goto('/')]);
+  const identical = Buffer.from('same bytes, two intentional filenames');
+  await sender.locator('#file-input').setInputFiles([
+    { name: 'copy-one.txt', mimeType: 'text/plain', buffer: identical },
+    { name: 'copy-two.txt', mimeType: 'text/plain', buffer: identical }
+  ]);
+  await expect(sender.locator('#real-files .file-row')).toHaveCount(2);
+  expect(await sender.locator('#file-input').evaluate(async (input: HTMLInputElement) => Promise.all([...input.files!].map(async (file) => ({ name: file.name, text: await file.text() }))))).toEqual([
+    { name: 'copy-one.txt', text: identical.toString() },
+    { name: 'copy-two.txt', text: identical.toString() }
+  ]);
+  await sender.getByRole('button', { name: 'Make a six-word room' }).click();
+  const code = (await sender.locator('.room-label strong').textContent())!;
+  await receiver.getByRole('tab', { name: 'Receive files' }).click();
+  await receiver.locator('#room-code').fill(code);
+  await receiver.getByRole('button', { name: 'Join this room' }).click();
+  await expect(sender.getByText('Devices connected. The direct path is ready.')).toBeVisible({ timeout: 12_000 });
+  await sender.getByRole('button', { name: 'Send 2 files' }).click();
+  await expect(receiver.getByRole('heading', { name: 'Transfer finished' })).toBeVisible({ timeout: 12_000 });
+  await expect(receiver.locator('.file-status')).toHaveText(['Verified', 'Verified']);
+  await expect(receiver.locator('.receipt li')).toHaveText([/copy-one\.txt/, /copy-two\.txt/]);
+  await expect(sender.locator('.receipt li')).toHaveText([/copy-one\.txt/, /copy-two\.txt/]);
+  await senderContext.close();
+  await receiverContext.close();
+});
+
+test('receipt history exports and imports complete receipt records @claim:receipt-export @claim:receipt-import', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(async () => {
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open('friend-file-drop', 2);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    const tx = db.transaction('receipts', 'readwrite');
+    tx.objectStore('receipts').put({ id: 'exported', roomCode: 'amber-apple-atlas-birch-blue-brisk', completedAt: '2026-08-28T00:00:00.000Z', direction: 'sent', files: [{ name: 'kept.txt', size: 4, hash: 'a'.repeat(64) }] });
+    await new Promise<void>((resolve, reject) => { tx.oncomplete = () => resolve(); tx.onerror = () => reject(tx.error); });
+    db.close();
+  });
+  await page.reload();
+  await page.locator('.receipt-history summary').click();
+  const downloadPromise = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Export saved receipts' }).click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toBe('friend-file-drop-receipts.json');
+  let exported = '';
+  for await (const chunk of (await download.createReadStream())!) exported += chunk.toString();
+  expect(JSON.parse(exported)[0].id).toBe('exported');
+  await page.locator('#import-history').setInputFiles({
+    name: 'friend-file-drop-receipts.json', mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify([{ id: 'imported', roomCode: 'cedar-chime-cobalt-comet-coral-daisy', completedAt: '2026-08-28T01:00:00.000Z', direction: 'received', files: [{ name: 'restored.txt', size: 8, hash: 'b'.repeat(64) }] }]))
+  });
+  await expect(page.locator('.receipt-history summary')).toContainText('2 saved receipts');
+});
+
+test('the saved room code is visible, documented, and removable @claim:room-code-storage', async ({ page }) => {
+  const rooms = new Map<string, MockRoom>();
+  await installRoomApi(page, rooms);
+  await page.goto('/');
+  await page.locator('#file-input').setInputFiles({ name: 'room-note.txt', mimeType: 'text/plain', buffer: Buffer.from('keep only the code') });
+  await page.getByRole('button', { name: 'Make a six-word room' }).click();
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('friend-file-drop:last-room'))).toMatch(/^[a-z]+(?:-[a-z]+){5}$/);
+  await page.locator('.resume-room summary').click();
+  await page.getByRole('button', { name: 'Clear saved room code' }).click();
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('friend-file-drop:last-room'))).toBeNull();
+  await page.goto('/privacy');
+  await expect(page.getByText('The most recent room code stays in this browser\'s local storage')).toBeVisible();
 });
 
 test('privacy boundaries match storage and loaded resources @claim:privacy-boundaries', async ({ page }) => {
@@ -243,6 +323,20 @@ test('keyboard users can reveal skip navigation and switch transfer roles with a
   await page.keyboard.press('ArrowRight');
   await expect(page.getByRole('tab', { name: 'Receive files' })).toBeFocused();
   await expect(page.getByRole('heading', { name: "Join the sender's room" })).toBeVisible();
+});
+
+test('the visible file chooser shows the focused input state', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('#file-input').focus();
+  await expect(page.locator('#file-drop')).toHaveCSS('outline-width', '3px');
+  await expect(page.locator('#file-drop')).toHaveCSS('outline-color', 'rgb(164, 60, 47)');
+});
+
+test('390px layout reflows at 200 percent text size', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  await page.evaluate(() => { document.documentElement.style.fontSize = '34px'; });
+  expect(await page.locator('body').evaluate((body) => ({ width: body.scrollWidth, viewport: document.documentElement.clientWidth }))).toEqual({ width: 390, viewport: 390 });
 });
 
 test('mobile interactive targets remain at least 44 CSS pixels', async ({ page }) => {

@@ -1,6 +1,6 @@
 'use strict';
 
-const { ROOM_PATTERN, rateLimit, publicRoom } = require('../lib/store');
+const { ROOM_PATTERN, clientIdentity, publicRoom } = require('../lib/store');
 const persistent = require('../lib/persistent');
 
 function json(status, body, extra = {}) {
@@ -9,8 +9,7 @@ function json(status, body, extra = {}) {
 
 module.exports = async function rooms(context, req) {
   const code = String(context.bindingData.code || '').toLowerCase();
-  const ip = String(req.headers['x-forwarded-for'] || req.headers['x-client-ip'] || 'unknown').split(',')[0].trim();
-  if (rateLimit(ip)) { context.res = json(429, { error: 'Too many room requests. Wait one minute and try again.' }, { 'retry-after': '60' }); return; }
+  if (await persistent.rateLimit(clientIdentity(req))) { context.res = json(429, { error: 'Too many room requests. Wait one minute and try again.' }, { 'retry-after': '60' }); return; }
   if (!ROOM_PATTERN.test(code)) { context.res = json(400, { error: 'Use a valid six-word room code.' }); return; }
   if (req.method === 'GET') {
     const room = await persistent.getRoom(code);

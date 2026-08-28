@@ -4,6 +4,7 @@ const TTL_MS = 15 * 60 * 1000;
 const MAX_TOTAL_BYTES = 25 * 1024 * 1024;
 const MAX_REQUESTS_PER_MINUTE = 90;
 const ROOM_PATTERN = /^[a-z]+(?:-[a-z]+){5}$/;
+const FILE_ID_PATTERN = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
 const rooms = new Map();
 const rates = new Map();
 
@@ -21,6 +22,17 @@ function rateLimit(ip, now = Date.now()) {
   }
   current.count += 1;
   return current.count > MAX_REQUESTS_PER_MINUTE;
+}
+
+// `X-Forwarded-For` is deliberately not used: callers can supply it. Azure
+// adds x-azure-clientip at the trusted platform boundary. Local development
+// falls back to the actual connection address, which is also not supplied by
+// the request body or headers.
+function clientIdentity(req = {}) {
+  const headers = req.headers || {};
+  const platformIp = headers['x-azure-clientip'] || headers['x-ms-client-ip'];
+  if (platformIp) return `platform:${String(platformIp).split(',').at(-1).trim()}`;
+  return `connection:${req.socket?.remoteAddress || req.connection?.remoteAddress || 'anonymous'}`;
 }
 
 function makeRoom(code, offer, now = Date.now()) {
@@ -64,4 +76,4 @@ function finishRoom(room) {
   room.answer = null;
 }
 
-module.exports = { TTL_MS, MAX_TOTAL_BYTES, MAX_REQUESTS_PER_MINUTE, ROOM_PATTERN, rooms, rates, cleanup, rateLimit, makeRoom, getRoom, publicRoom, appendFile, finishRoom };
+module.exports = { TTL_MS, MAX_TOTAL_BYTES, MAX_REQUESTS_PER_MINUTE, ROOM_PATTERN, FILE_ID_PATTERN, rooms, rates, cleanup, rateLimit, clientIdentity, makeRoom, getRoom, publicRoom, appendFile, finishRoom };

@@ -35,6 +35,7 @@ Audited 2026-08-28 against the `plain-words` rules. Hyphenated terms and numbers
 | Resume a previous room | 4 |
 | Previous room code | 3 |
 | Reopen this room | 3 |
+| Clear saved room code | 4 |
 | Tell the receiver the six words. | 6 |
 | This room expires after 15 minutes. | 6 |
 | Direct path not working? | 4 |

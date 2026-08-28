@@ -33,13 +33,13 @@ npm run build
 
 ## Privacy and offline use
 
-The app has no analytics, advertising, third-party runtime scripts, or contact access. Direct files use WebRTC. Both people must opt in before relay bytes are accepted. Receipts and resumable direct-transfer chunks use local IndexedDB. The installed shell works offline after the first visit; starting a transfer requires a network and another browser.
+The app has no analytics, advertising, third-party runtime scripts, or contact access. Direct files use WebRTC. Both people must opt in before relay bytes are accepted. Receipts and resumable direct-transfer chunks use local IndexedDB. The most recent room code stays in local storage until another room replaces it, you clear it in the transfer sheet, or you clear site data. The installed shell works offline after the first visit; starting a transfer requires a network and another browser.
 
 See [`/privacy`](https://friend-file-drop.sociobot.in/privacy) and [`/terms`](https://friend-file-drop.sociobot.in/terms) for the plain-language policies.
 
 ## Deploy
 
-Deploy `dist/` with the managed functions in `api/` to Azure Static Web Apps. `public/staticwebapp.config.json` provides explicit SPA routes, a real styled 404 response, security headers, and immutable caching for fingerprinted assets. Deployment, DNS, and billing stay outside this repository.
+Deploy `dist/` with the managed functions in `api/` to Azure Static Web Apps. `public/staticwebapp.config.json` provides explicit SPA routes, a real styled 404 response, security headers, and immutable caching for fingerprinted assets. The API exposes `GET /api/health` with its service, version, and deployment identity. Deployment, DNS, and billing stay outside this repository.
 
 ## Project notes
 

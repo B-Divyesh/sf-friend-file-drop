@@ -58,6 +58,9 @@ export class DirectTransfer {
     this.room = new RoomService(roomCode);
     this.peer.onconnectionstatechange = () => {
       const state = this.peer.connectionState;
+      // Once either person has chosen the relay, its explicit-consent status is
+      // the useful state. A late WebRTC event must not hide it.
+      if (this.relayRole) return;
       if (state === 'connected') this.hooks.onState('Devices connected. The direct path is ready.', 'success');
       if (state === 'failed') this.hooks.onState('The direct path failed. Choose the private relay below on both devices.', 'error');
       if (state === 'disconnected') this.hooks.onState('Connection paused. Rejoin this room to resume saved chunks.', 'note');
@@ -68,8 +71,12 @@ export class DirectTransfer {
   private attachChannel(channel: RTCDataChannel): void {
     this.channel = channel;
     channel.binaryType = 'arraybuffer';
-    channel.onopen = () => this.hooks.onState('Devices connected. The direct path is ready.', 'success');
-    channel.onerror = () => this.hooks.onState('The direct path stopped. Rejoin to resume, or choose the relay.', 'error');
+    channel.onopen = () => {
+      if (!this.relayRole) this.hooks.onState('Devices connected. The direct path is ready.', 'success');
+    };
+    channel.onerror = () => {
+      if (!this.relayRole) this.hooks.onState('The direct path stopped. Rejoin to resume, or choose the relay.', 'error');
+    };
     channel.onmessage = (event) => {
       this.receiveQueue = this.receiveQueue.then(() => this.receive(event.data)).catch(() => {
         this.hooks.onState('A received chunk could not be saved. Rejoin the room to resume.', 'error');
@@ -261,6 +268,9 @@ export class DirectTransfer {
 export async function buildManifest(files: File[]): Promise<FileManifest[]> {
   return Promise.all(files.map(async (file) => {
     const hash = await hashFile(file);
-    return { id: hash, name: file.name, type: file.type || 'application/octet-stream', size: file.size, hash };
+    // A hash identifies bytes, not a selected file. Two named copies with the
+    // same bytes are two receipt rows, so their transfer/storage keys must be
+    // distinct from the content hash.
+    return { id: crypto.randomUUID(), name: file.name, type: file.type || 'application/octet-stream', size: file.size, hash };
   }));
 }

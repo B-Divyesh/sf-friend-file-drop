@@ -89,5 +89,54 @@
     "where": "privacy page and README",
     "test": "npm test -- --grep @claim:privacy-boundaries",
     "sandbox": "fresh privacy-page context; inspect all requests, loaded script/style origins, and contact inputs"
+  },
+  {
+    "id": "individual-file-receipts",
+    "claim": "Each selected file gets its own verified receipt row, even when two files have identical bytes.",
+    "where": "landing hero caption and transfer receipt",
+    "test": "npm test -- --grep @claim:individual-file-receipts",
+    "sandbox": "two fresh browser contexts; transfer two differently named files with the same bytes and assert two verified receipt rows"
+  },
+  {
+    "id": "own-files-untouched",
+    "claim": "Your own files stay untouched.",
+    "where": "landing action note",
+    "test": "npm test -- --grep @claim:own-files-untouched",
+    "sandbox": "fresh sender browser; transfer selected fixtures and assert their names and bytes remain in the source input"
+  },
+  {
+    "id": "receipt-export",
+    "claim": "Exports saved receipts.",
+    "where": "saved receipt controls",
+    "test": "npm test -- --grep @claim:receipt-export",
+    "sandbox": "fresh browser with one local receipt; download the JSON and assert its receipt record"
+  },
+  {
+    "id": "receipt-import",
+    "claim": "Imports saved receipts.",
+    "where": "saved receipt controls",
+    "test": "npm test -- --grep @claim:receipt-import",
+    "sandbox": "fresh browser with one local receipt; import a valid JSON fixture and assert both records appear"
+  },
+  {
+    "id": "demo-no-real-files",
+    "claim": "The sample transfer uses no API request or visitor file.",
+    "where": "demo ready status and demo documentation",
+    "test": "npm test -- --grep @claim:demo-no-real-files",
+    "sandbox": "fresh browser at /demo; run the sample, assert no /api request and no file input"
+  },
+  {
+    "id": "room-code-storage",
+    "claim": "The most recent room code is stored locally until you clear it or make another room.",
+    "where": "privacy page and resume-room controls",
+    "test": "npm test -- --grep @claim:room-code-storage",
+    "sandbox": "fresh browser with an isolated room fixture; create a room, clear its code, and assert localStorage removal"
+  },
+  {
+    "id": "api-health",
+    "claim": "The managed API exposes a health response with service and build identity.",
+    "where": "README deployment notes",
+    "test": "node --test --test-name-pattern=@claim:api-health api/integration.test.js",
+    "sandbox": "isolated function invocation; assert the public health JSON has service, version, and no-store response policy"
   }
 ]

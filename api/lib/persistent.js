@@ -1,9 +1,11 @@
 'use strict';
 
+const crypto = require('node:crypto');
 const memory = require('./store');
 const connection = process.env.AzureWebJobsStorage;
 let roomContainer;
 let fileContainer;
+let rateContainer;
 
 async function containers() {
   if (!connection || connection === 'UseDevelopmentStorage=true') return null;
@@ -12,9 +14,52 @@ async function containers() {
     const service = BlobServiceClient.fromConnectionString(connection);
     roomContainer = service.getContainerClient('friend-file-drop-rooms');
     fileContainer = service.getContainerClient('friend-file-drop-relay');
-    await Promise.all([roomContainer.createIfNotExists(), fileContainer.createIfNotExists()]);
+    rateContainer = service.getContainerClient('friend-file-drop-rate-limits');
+    await Promise.all([roomContainer.createIfNotExists(), fileContainer.createIfNotExists(), rateContainer.createIfNotExists()]);
   }
-  return { roomContainer, fileContainer };
+  return { roomContainer, fileContainer, rateContainer };
+}
+
+const pause = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+
+async function rateLimit(identity, now = Date.now()) {
+  const clients = await containers();
+  if (!clients) return memory.rateLimit(identity, now);
+
+  // One leased blob per server-derived identity makes increments atomic across
+  // function instances. Do not silently fail open if storage is busy.
+  const key = crypto.createHash('sha256').update(identity).digest('hex');
+  const blob = clients.rateContainer.getBlockBlobClient(key);
+  try {
+    const initial = Buffer.from(JSON.stringify({ since: now, count: 1 }));
+    await blob.upload(initial, initial.length, { conditions: { ifNoneMatch: '*' }, blobHTTPHeaders: { blobContentType: 'application/json' } });
+    return false;
+  } catch (error) {
+    if (![409, 412].includes(error.statusCode)) throw error;
+  }
+
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const lease = blob.getBlobLeaseClient();
+    try {
+      await lease.acquireLease(15);
+    } catch (error) {
+      if (![409, 412].includes(error.statusCode)) throw error;
+      await pause(25);
+      continue;
+    }
+    try {
+      let current = { since: now, count: 0 };
+      try { current = JSON.parse((await blob.downloadToBuffer()).toString('utf8')); } catch { /* a racing cleanup is treated as a fresh window */ }
+      if (current.since + 60_000 <= now) current = { since: now, count: 0 };
+      current.count += 1;
+      const data = Buffer.from(JSON.stringify(current));
+      await blob.upload(data, data.length, { conditions: { leaseId: lease.leaseId }, blobHTTPHeaders: { blobContentType: 'application/json' } });
+      return current.count > memory.MAX_REQUESTS_PER_MINUTE;
+    } finally {
+      await lease.releaseLease().catch(() => undefined);
+    }
+  }
+  return true;
 }
 
 async function saveRoom(code, room) {
@@ -82,4 +127,4 @@ async function getFile(code, room, fileId) {
   catch (error) { if (error.statusCode === 404) return null; throw error; }
 }
 
-module.exports = { getRoom, makeRoom, saveRoom, appendFile, getFile, clearFiles };
+module.exports = { getRoom, makeRoom, saveRoom, appendFile, getFile, clearFiles, rateLimit };
