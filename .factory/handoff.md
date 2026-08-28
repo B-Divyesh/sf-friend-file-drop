@@ -1,26 +1,34 @@
-# Friend File Drop repair handoff
+# Friend File Drop verification handoff
 
 ## Status
 
-Release blockers from verifier report `37080fd73138bcbac4d961b4772f86d30d8dce09` are repaired. The PWA is deployed at <https://friend-file-drop.sociobot.in> from `main`. The latest deployed app bundle matches the local production bundle byte for byte.
+**FAIL — do not release candidate `a15ae576aeed01392f18ab8799b49fc2b808a0df`.**
 
-Artifact class remains `pwa-offline`. The frontend and offline shell remain static. Azure Static Web Apps now deploys the repository's narrow managed API for short-lived signaling and the optional relay.
+Independent QA was performed on 2026-08-28 against <https://friend-file-drop.sociobot.in> from the clean candidate checkout. Product code was not changed. Full evidence is in [`.factory/verification-2.md`](verification-2.md).
 
-## What changed
+## Release blockers
 
-- Replaced manual SDP pairing notes with a six-word room flow. The sender shares only the displayed code; the receiver enters it to connect.
-- Added a same-origin managed room API with durable managed blob state, 15-minute expiry, input validation, a 90-request-per-minute IP limit, and no-store responses.
-- Added an explicit relay choice on both screens. Relay transfer starts only after both people opt in, accepts at most 25 MB per room, and clears file bytes when the receiver posts its receipt.
-- Added IndexedDB checkpoints for direct-transfer chunks. Each stored chunk has its own SHA-256 digest; rejoining the same room resumes from the contiguous verified offset. Senders can reopen their previous room code.
-- Expanded `.factory/claims.json` to 13 claims. Each visitor-facing privacy, storage, room, relay, resume, offline, account, price, and receipt promise now points to one tagged regression test.
-- Added long-lived immutable caching for `/assets/*`. HTML and the service worker remain revalidated.
-- Replaced the catch-all SPA fallback with explicit app-route rewrites. Unknown paths now return the designed `404.html` with HTTP 404.
-- Added accessible tab arrow-key behavior, designed focus, form errors, 44 px mobile targets, and a full semantic static 404 page.
-- Updated README, demo documentation, privacy/terms copy, copy audit, version, and service-worker cache version.
+1. The required `opt-in-relay` claim command failed on its first clean run. Later repeats passed, making the release gate flaky; the claims contract treats the observed failure as blocking.
+2. Two different files with identical bytes collapse to one SHA-keyed incoming record. Both browsers show **Transfer finished**, but only one filename appears in the receipt and one receiver row remains **Waiting**.
+3. Ordinary API bursts did not return 429 through 105 requests. A caller-supplied fixed `X-Forwarded-For` reaches the intended threshold at request 91, showing an inconsistent/spoofable key. The relay-files endpoint's 429 has no `Retry-After` header.
+4. Keyboard focus on the core file picker is invisible because the focused input is 1 × 1 px and transparent, with no focus treatment on its visible label.
+5. `.factory/claims.json` omits material UI promises, including receipt import/export, “Each file crosses once,” and the demo's no-network/no-real-file statement.
 
-## Verification evidence — 2026-08-28
+Additional findings: 200% text resize causes 450 px horizontal overflow at a 390 px viewport; `/api/health` is absent, so the deployed function build has no external identity; persistent localStorage of the previous room code is not described on the privacy page.
 
-Clean local gate:
+## What passed
+
+- First-read and one-click sample-data demo gate.
+- `npm ci`, lint/typecheck, production build, dependency audit, and the final full `npm test` run.
+- 12/13 claim commands on first execution; the relay command alone failed.
+- Live suite: 8/8, including direct transfer, dual-opt-in relay, offline reload, 404, and axe.
+- Normal and file-size-boundary direct transfer, invalid-code recovery, receipt import/export, live relay cleanup, and concurrent consent checks.
+- Axe: zero serious/critical findings on all five tested live routes.
+- Offline reload, service-worker cache/update plumbing, manifest/icons, security headers, same-origin demo privacy, no cookies, and immutable hashed-asset caching.
+- Lighthouse mobile: Performance 94, Accessibility 100, Best Practices 100, SEO 100; LCP 1.3 s, CLS 0.
+- Live HTML, JS, CSS, service worker, manifest, and primary assets are byte-identical to the candidate build. The prior deployment-only failure was not reproduced.
+
+## Commands
 
 ```sh
 npm ci
@@ -28,36 +36,14 @@ npm test
 npm run lint
 npm run build
 npm audit --omit=dev --audit-level=high
-```
-
-- API/config unit and integration tests: 5 passed.
-- Local Playwright: 17 passed; 8 live-only tests skipped unless `LIVE_URL` is set.
-- TypeScript/lint: passed.
-- Production build: `dist/index.html` exists; JS 35.23 KB raw / 11.57 KB gzip; CSS 17.02 KB raw / 4.81 KB gzip; hero WebP 58 KB.
-- Dependency audit: 0 vulnerabilities.
-- Claims exercised: all 13 entries in `.factory/claims.json`, including dual-consent relay, verified resume offset, and local receipt storage.
-- Browser coverage: desktop Chromium, 390 × 844 mobile, keyboard skip link, arrow-key tabs, 44 px targets, reduced motion, offline reload, and axe checks.
-
-Live gate:
-
-```sh
 LIVE_URL=https://friend-file-drop.sociobot.in npx playwright test tests/live.spec.ts
-VERIFY_NODE_MODULES="$PWD/node_modules" /opt/fleet/lib/verify-url.sh https://friend-file-drop.sociobot.in /tmp/friend-file-drop-repair-final
 ```
 
-- Live Playwright: 8 passed. This includes all routes, real HTTP 404, axe with 0 serious/critical findings, live offline reload, a real two-browser six-word direct transfer, and a real dual-opt-in relay transfer.
-- URL verifier: 701 ms load; no console/page errors; title, `lang=en`, one h1, main, alt text, and button labels passed.
-- Lighthouse mobile: Performance 100, Accessibility 100, Best Practices 100, SEO 100; FCP 1.0 s, LCP 1.3 s, TBT 20 ms, CLS 0.
-- `/assets/index-CmkZGAgb.js`: `Cache-Control: public, max-age=31536000, immutable`.
-- `/missing-page`: HTTP 404 with the styled notebook page.
-- API invalid-room response: HTTP 400, JSON, `Cache-Control: no-store`.
-- Local/live JS SHA-256: `58eff10b537bcc8b9b9c753052f741805ed3f77a5f2ad0a62209fc5dee0aa6cc` on both copies.
-- Deployment: Azure Static Web Apps production deployment `4b1a2c2f-c468-46d3-abc6-21a15714e19b` succeeded; custom domain and TLS are ready.
-- Evidence files: `/tmp/friend-file-drop-repair-final/verify.json`, desktop/mobile screenshots, and `/tmp/friend-file-drop-repair-final/lighthouse.json`.
+## Next steps
 
-## Operations and known limits
-
-- Direct WebRTC is preferred. On restrictive networks, both people must read the disclosure and choose the relay.
-- Relay rooms are deliberately temporary and limited to 25 MB total. This keeps the fallback useful for personal files while limiting abuse and temporary storage.
-- A transfer needs another reachable browser and a network. The installed shell, demo, and saved receipts remain available offline.
-- Keep the original file until both sides show a receipt. Local receipts are records, not file backups.
+- Give every file instance a unique transfer ID independent of its content hash, and add a two-identical-content-files regression test.
+- Make the relay claim test deterministic and preserve the one-consent status against competing direct-path state updates.
+- Move abuse limiting to shared server-side state keyed from trusted platform metadata; add `Retry-After` to every 429 response and live tests for both endpoints.
+- Add visible `:focus-within` styling for the file chooser and fix 200% text reflow.
+- Register and test every remaining visitor-facing claim.
+- Expose a read-only health/build identity for the managed API and document/clear persistent room-code metadata.
