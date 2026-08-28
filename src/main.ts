@@ -97,6 +97,7 @@ function homePage(): string {
     <section class="workbench ruled" id="drop" aria-labelledby="workbench-title">
       <div class="section-intro"><p class="margin-number">01</p><div><h2 id="workbench-title">Prepare a direct transfer</h2><p>Choose whether this device sends or receives. Pairing notes connect the browsers without an account.</p></div></div>
       <div id="transfer-app" class="transfer-app"></div>
+      <div id="receipt-history"></div>
     </section>
     <section class="how-section" id="how" aria-labelledby="how-title">
       <div class="section-intro"><p class="margin-number">02</p><div><h2 id="how-title">How the files cross</h2><p>The two browsers agree on one private path.</p></div></div>
@@ -345,12 +346,34 @@ function setupTransferApp(): void {
   }
 
   start();
-  void getReceipts().then((receipts) => {
-    if (receipts.length) {
-      const note = document.createElement('p');
-      note.className = 'saved-note';
-      note.textContent = `${receipts.length} finished receipt${receipts.length === 1 ? '' : 's'} saved in this browser.`;
-      root.prepend(note);
+  void renderReceiptHistory();
+}
+
+async function renderReceiptHistory(): Promise<void> {
+  const root = document.querySelector<HTMLDivElement>('#receipt-history');
+  if (!root) return;
+  const receipts = await getReceipts();
+  root.innerHTML = `<details class="receipt-history"><summary>${receipts.length} saved receipt${receipts.length === 1 ? '' : 's'} on this device</summary>${receipts.length ? `<ul>${receipts.map((receipt) => `<li><strong>${receipt.direction === 'sent' ? 'Sent' : 'Received'} ${receipt.files.length} file${receipt.files.length === 1 ? '' : 's'}</strong><span>${new Date(receipt.completedAt).toLocaleString()} · ${escapeText(receipt.roomCode)}</span></li>`).join('')}</ul>` : '<p>Finished real transfers will appear here.</p>'}<div class="history-actions"><button class="text-button" type="button" id="export-history" aria-label="Export saved receipts" ${receipts.length ? '' : 'disabled'}>Export saved receipts</button><label class="import-label">Import receipts<input type="file" id="import-history" accept="application/json,.json" /></label></div><p class="state-note" id="history-state" role="status"></p></details>`;
+  root.querySelector('#export-history')?.addEventListener('click', () => {
+    const url = URL.createObjectURL(new Blob([JSON.stringify(receipts, null, 2)], { type: 'application/json' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'friend-file-drop-receipts.json';
+    link.click();
+    URL.revokeObjectURL(url);
+  });
+  root.querySelector<HTMLInputElement>('#import-history')?.addEventListener('change', async (event) => {
+    const state = root.querySelector<HTMLElement>('#history-state')!;
+    try {
+      const file = (event.currentTarget as HTMLInputElement).files?.[0];
+      if (!file) return;
+      const imported = JSON.parse(await file.text()) as SavedReceipt[];
+      if (!Array.isArray(imported) || imported.some((item) => !item.id || !item.completedAt || !Array.isArray(item.files))) throw new Error();
+      await Promise.all(imported.map((receipt) => saveReceipt(receipt)));
+      await renderReceiptHistory();
+    } catch {
+      state.textContent = 'That file is not a receipt export. Choose a Friend File Drop JSON file.';
+      state.dataset.tone = 'error';
     }
   });
 }

@@ -26,6 +26,10 @@ Audited 2026-08-28 against the `plain-words` rules. Hyphenated terms and numbers
 | The list shows file sizes and hashes before anything moves. | 10 |
 | File manifest | 2 |
 | Your chosen files will appear here. | 6 |
+| 0 saved receipts on this device | 6 |
+| Finished real transfers will appear here. | 6 |
+| Export saved receipts | 3 |
+| Import receipts | 2 |
 | How the files cross | 4 |
 | The two browsers agree on one private path. | 8 |
 | Choose the files | 3 |

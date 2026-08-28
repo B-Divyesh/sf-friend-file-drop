@@ -83,6 +83,13 @@ for (const route of ['/', '/demo', '/privacy', '/terms']) {
   });
 }
 
+test('unknown addresses show the notebook 404 page', async ({ page }) => {
+  await page.goto('/missing-page');
+  await expect(page).toHaveTitle('Page not found — Friend File Drop');
+  await expect(page.getByRole('heading', { level: 1, name: 'This notebook page is missing' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Return to the file drop' })).toBeVisible();
+});
+
 test('mobile first screen keeps the actions visible', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');

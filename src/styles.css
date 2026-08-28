@@ -115,6 +115,14 @@ textarea:focus { border-color: var(--teal); }
 .state-note[data-tone="error"] { color: #792b22; }
 .state-note[data-tone="success"] { color: var(--green); font-weight: 700; }
 .saved-note { padding: .6rem 1rem; margin: 0 0 1rem; border-left: 4px solid var(--green); background: rgb(39 91 59 / 8%); }
+.receipt-history { max-width: 820px; padding: 1rem 1.3rem; margin: 1.5rem auto 0; border: 1px solid var(--ink); background: rgb(244 238 220 / 88%); }
+.receipt-history summary { min-height: 44px; padding: .5rem 0; font-weight: 800; cursor: pointer; }
+.receipt-history ul { padding: 0; list-style: none; }
+.receipt-history li { display: flex; justify-content: space-between; gap: 1rem; padding: .55rem 0; border-bottom: 1px solid var(--rule); }
+.receipt-history li span { color: var(--ink-soft); font: .78rem var(--mono); text-align: right; }
+.history-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; }
+.import-label { display: inline-flex; align-items: center; min-height: 44px; padding: .3rem .55rem; color: var(--teal-dark); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.import-label input { position: absolute; width: 1px; height: 1px; opacity: 0; }
 .received-panel { margin-top: 2rem; }
 
 .how-section { background: var(--paper); }
