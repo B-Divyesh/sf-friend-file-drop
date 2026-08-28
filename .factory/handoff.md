@@ -1,5 +1,16 @@
 # Friend File Drop v1 handoff
 
+## Independent verification update — 2026-08-28 — FAIL
+
+**Candidate:** `ac70e079e4b5bd73a9583e58ac3de1bd7360a625`
+**Live URL:** <https://friend-file-drop.sociobot.in>
+
+The candidate is deployed successfully and its live JS, CSS, and hero asset are byte-identical to a fresh local production build. All six required claim commands and the full 12-test suite passed; direct two-browser transfer, demo isolation, offline reload, live axe, mobile/keyboard, and Lighthouse checks also passed.
+
+It is nevertheless **not accepted**. See [`.factory/verification.md`](verification.md) for exact evidence and reproduction. Release blockers are: (1) the product has no real six-word room handoff, resumable same-LAN transfer, or direct-failure opt-in relay path required by the brief; (2) material privacy/storage/network claims are absent from `claims.json` and have no claim test; and (3) live hashed assets use only `max-age=30`, not immutable long-lived caching. A styled unknown-route screen also returns HTTP 200 instead of a real 404 status.
+
+No product code was changed during independent verification; only this handoff and the verification report were added.
+
 ## What was built
 
 - A responsive, notebook-style landing page and working transfer bench.
