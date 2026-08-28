@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Friend File Drop">
+  <rect width="64" height="64" rx="10" fill="#f4eedc"/>
+  <path d="M8 14h18v30H8zM38 20h18v30H38z" fill="#fff" stroke="#172a32" stroke-width="3"/>
+  <path d="M23 32h20m-6-7 7 7-7 7" fill="none" stroke="#075f60" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M13 21h8M13 27h8M43 38h8M43 44h8" stroke="#a43c2f" stroke-width="2"/>
+</svg>

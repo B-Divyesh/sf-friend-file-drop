@@ -1,0 +1,7 @@
+{
+  "model": "factory-image",
+  "date": "2026-08-28",
+  "prompt": "Use case: illustration-story. Asset type: landing page hero. An open ruled laboratory notebook between an unbranded smartphone and an unbranded laptop on a friendly home workbench; three small paper file specimens cross a short handmade paper bridge; a completed receipt card with a simple check mark sits at the destination. Hand-cut editorial collage with warm recycled paper, blue-black fountain ink, red pencil, masking tape, and subtle halftone grain. Soft morning window light, slightly top-down view, wide landscape composition with breathing room. Palette: warm cream, deep blue-black, muted teal, brick coral, mustard highlight. No people, no hands, no brands, no readable text, no logos, no watermark, no glossy 3D, no neon gradients, no floating glass panels, no photoreal device UI.",
+  "source": "/opt/fleet/lib/gen-image.sh",
+  "license": "Original generated asset for Friend File Drop"
+}
