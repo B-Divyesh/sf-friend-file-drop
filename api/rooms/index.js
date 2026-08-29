@@ -28,8 +28,21 @@ module.exports = async function rooms(context, req) {
     let room;
     if (body.action === 'create') room = await persistent.makeRoom(code, body.offer);
     else room = await persistent.updateRoom(code, async (current, clients) => {
-      if (body.action === 'answer') current.answer = body.answer;
-      else if (body.action === 'relay-consent' && ['sender', 'receiver'].includes(body.role)) current.relay[body.role] = true;
+      if (body.action === 'answer') {
+        const offerVersion = Number(body.offerVersion || current.offerVersion || 1);
+        if (offerVersion !== (current.offerVersion || 1)) throw new Error('That direct connection was replaced. Join the room again.');
+        current.answer = body.answer;
+        current.answerVersion = offerVersion;
+      } else if (body.action === 'rejoin') {
+        // A receiver has lost an established connection. The sender's status
+        // watcher will publish a new offer, then this receiver accepts it.
+        current.rejoinVersion = (current.rejoinVersion || 0) + 1;
+      } else if (body.action === 'reopen') {
+        current.offer = body.offer;
+        current.answer = null;
+        current.offerVersion = (current.offerVersion || 1) + 1;
+        current.answerVersion = 0;
+      } else if (body.action === 'relay-consent' && ['sender', 'receiver'].includes(body.role)) current.relay[body.role] = true;
       else if (body.action === 'manifest') {
         if (!current.relay.sender || !current.relay.receiver) throw new Error('Both people must choose the relay first.');
         if (!Array.isArray(body.manifest) || body.manifest.length > 20) throw new Error('The manifest must contain 1 to 20 files.');

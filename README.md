@@ -37,7 +37,7 @@ npm run build
 
 The app has no analytics, advertising, third-party runtime scripts, or contact access. Files normally travel directly between the two browsers. Both people must choose the relay before it accepts file bytes.
 
-Finished receipts and verified pieces stay in this browser's database. The most recent room code also stays in this browser. Another room replaces it. You can also clear it from the transfer sheet or by clearing site data.
+Finished receipts and verified pieces stay in this browser's database. The most recent room code and its file names, sizes, hashes, and transfer IDs also stay in this browser. This lets a sender reselect the same files after a reload and reopen the room at the saved offset. Another room replaces this data. You can also clear it from the transfer sheet or by clearing site data.
 
 The installed app opens offline after the first visit. Sending files requires a network and another browser.
 

@@ -95,8 +95,9 @@ Audited 2026-08-29 against the `plain-words` rules. Hyphenated terms and numbers
 | Files normally travel directly between the two browsers. | 8 |
 | Both people must choose the relay before it accepts file bytes. | 11 |
 | Finished receipts and verified pieces stay in this browser's database. | 10 |
-| The most recent room code also stays in this browser. | 10 |
-| Another room replaces it. | 4 |
+| The most recent room code and its file names, sizes, hashes, and transfer IDs also stay in this browser. | 19 |
+| This lets a sender reselect the same files after a reload and reopen the room at the saved offset. | 18 |
+| Another room replaces this data. | 5 |
 | You can also clear it from the transfer sheet or by clearing site data. | 14 |
 | The installed app opens offline after the first visit. | 9 |
 | Sending files requires a network and another browser. | 8 |

@@ -6,6 +6,9 @@ import { createHash } from 'node:crypto';
 type MockRoom = {
   offer?: unknown;
   answer?: unknown;
+  offerVersion?: number;
+  answerVersion?: number;
+  rejoinVersion?: number;
   relay: { sender: boolean; receiver: boolean };
   manifest?: Array<{ id: string; name: string; type: string; size: number; hash: string }>;
   files: Map<string, Buffer>;
@@ -40,10 +43,17 @@ function installRoomApi(page: Page, rooms: Map<string, MockRoom>, options: RoomA
     }
     if (request.method() === 'POST') {
       const body = request.postDataJSON() as Record<string, unknown>;
-      if (body.action === 'create') rooms.set(code, { offer: body.offer, relay: { sender: false, receiver: false }, files: new Map() });
+      if (body.action === 'create') rooms.set(code, { offer: body.offer, offerVersion: 1, answerVersion: 0, rejoinVersion: 0, relay: { sender: false, receiver: false }, files: new Map() });
       const current = rooms.get(code);
       if (!current) return json(404, { error: 'That room expired or does not exist.' });
-      if (body.action === 'answer') current.answer = body.answer;
+      if (body.action === 'answer') { current.answer = body.answer; current.answerVersion = Number(body.offerVersion) || 1; }
+      if (body.action === 'rejoin') current.rejoinVersion = (current.rejoinVersion || 0) + 1;
+      if (body.action === 'reopen') {
+        current.offer = body.offer;
+        current.answer = undefined;
+        current.offerVersion = (current.offerVersion || 1) + 1;
+        current.answerVersion = 0;
+      }
       if (body.action === 'relay-consent') current.relay[body.role as 'sender' | 'receiver'] = true;
       if (body.action === 'manifest') current.manifest = body.manifest as MockRoom['manifest'];
       if (body.action === 'receipt') { current.receipt = body.receipt; current.files.clear(); }
@@ -316,7 +326,7 @@ test('direct transfer withholds receipts for corrupt bytes until a verified retr
   await receiverContext.close();
 });
 
-test('saved direct chunks resume at the verified offset @claim:resumable-transfer', async ({ browser }) => {
+test('an established direct transfer survives receiver rejoin and sender reopen at its saved offset @claim:resumable-transfer @regression:established-direct-interruption', async ({ browser }) => {
   const senderContext = await browser.newContext();
   const receiverContext = await browser.newContext();
   const sender = await senderContext.newPage();
@@ -324,38 +334,72 @@ test('saved direct chunks resume at the verified offset @claim:resumable-transfe
   const rooms = new Map<string, MockRoom>();
   await Promise.all([installRoomApi(sender, rooms), installRoomApi(receiver, rooms)]);
   await Promise.all([sender.goto('/'), receiver.goto('/')]);
-  const data = Buffer.alloc(70 * 1024, 97);
+  const data = Buffer.alloc(8 * 1024 * 1024, 97);
   await sender.locator('#file-input').setInputFiles({ name: 'resume.bin', mimeType: 'application/octet-stream', buffer: data });
   const transferId = await sender.locator('#real-files .file-row').getAttribute('data-file-id');
   expect(transferId).toMatch(/^[a-f0-9-]{36}$/);
   await sender.getByRole('button', { name: 'Make a six-word room' }).click();
   const code = (await sender.locator('.room-label strong').textContent())!;
-  await receiver.evaluate(async ({ code: roomCode, id, bytes }) => {
-    const db = await new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open('friend-file-drop', 2);
-      request.onupgradeneeded = () => {
-        if (!request.result.objectStoreNames.contains('receipts')) request.result.createObjectStore('receipts', { keyPath: 'id' });
-        if (!request.result.objectStoreNames.contains('partial-chunks')) request.result.createObjectStore('partial-chunks', { keyPath: 'key' });
-      };
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
-    });
-    const tx = db.transaction('partial-chunks', 'readwrite');
-    const data = new Uint8Array(bytes).buffer;
-    const digest = await crypto.subtle.digest('SHA-256', data);
-    const chunkHash = [...new Uint8Array(digest)].map((part) => part.toString(16).padStart(2, '0')).join('');
-    tx.objectStore('partial-chunks').put({ key: `${roomCode}:${id}:0`, roomCode, fileId: id, offset: 0, data, hash: chunkHash });
-    await new Promise<void>((resolve) => { tx.oncomplete = () => resolve(); });
-    db.close();
-  }, { code, id: transferId!, bytes: [...data.subarray(0, 32 * 1024)] });
-  await receiver.reload();
   await receiver.getByRole('tab', { name: 'Receive files' }).click();
   await receiver.locator('#room-code').fill(code);
   await receiver.getByRole('button', { name: 'Join this room' }).click();
   await expect(sender.getByText('Devices connected. The direct path is ready.')).toBeVisible({ timeout: 12_000 });
+
   await sender.getByRole('button', { name: 'Send 1 file' }).click();
-  await expect(sender.getByText('Resuming resume.bin at 32 KB.')).toBeVisible();
-  await expect(receiver.getByRole('heading', { name: 'Transfer finished' })).toBeVisible();
+  await expect.poll(() => receiver.locator('#real-files progress').evaluate((progress: HTMLProgressElement) => progress.value)).toBeGreaterThanOrEqual(32 * 1024);
+  const savedOffset = await receiver.evaluate(async ({ roomCode, id }) => {
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open('friend-file-drop', 2);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    const chunks = await new Promise<Array<{ roomCode: string; fileId: string; data: ArrayBuffer }>>((resolve, reject) => {
+      const request = db.transaction('partial-chunks').objectStore('partial-chunks').getAll();
+      request.onsuccess = () => resolve(request.result as Array<{ roomCode: string; fileId: string; data: ArrayBuffer }>);
+      request.onerror = () => reject(request.error);
+    });
+    db.close();
+    return chunks.filter((chunk) => chunk.roomCode === roomCode && chunk.fileId === id).reduce((total, chunk) => total + chunk.data.byteLength, 0);
+  }, { roomCode: code, id: transferId! });
+  expect(savedOffset).toBeGreaterThanOrEqual(32 * 1024);
+
+  // This is a real interruption: chunks arrive over an established data
+  // channel before the receiver reloads and visibly rejoins the room.
+  await receiver.reload();
+  await receiver.getByRole('tab', { name: 'Receive files' }).click();
+  await receiver.locator('#room-code').fill(code);
+  await receiver.getByRole('button', { name: 'Join this room' }).click();
+  await expect.poll(() => rooms.get(code)?.offerVersion).toBeGreaterThan(1);
+  await expect(sender.getByText('Devices connected. The direct path is ready.')).toBeVisible({ timeout: 12_000 });
+  const persistedOffset = await receiver.evaluate(async ({ roomCode, id }) => {
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open('friend-file-drop', 2);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    const chunks = await new Promise<Array<{ roomCode: string; fileId: string; data: ArrayBuffer }>>((resolve, reject) => {
+      const request = db.transaction('partial-chunks').objectStore('partial-chunks').getAll();
+      request.onsuccess = () => resolve(request.result as Array<{ roomCode: string; fileId: string; data: ArrayBuffer }>);
+      request.onerror = () => reject(request.error);
+    });
+    db.close();
+    return chunks.filter((chunk) => chunk.roomCode === roomCode && chunk.fileId === id).reduce((total, chunk) => total + chunk.data.byteLength, 0);
+  }, { roomCode: code, id: transferId! });
+  expect(persistedOffset).toBeGreaterThanOrEqual(savedOffset);
+
+  // The other documented failure was a sender reload. Re-selecting the same
+  // file restores its stable file ID, and Reopen replaces the offer in place.
+  await sender.reload();
+  await sender.locator('#file-input').setInputFiles({ name: 'resume.bin', mimeType: 'application/octet-stream', buffer: data });
+  expect(await sender.locator('#real-files .file-row').getAttribute('data-file-id')).toBe(transferId);
+  await sender.locator('.resume-room > summary').click();
+  await sender.getByRole('button', { name: 'Reopen this room' }).click();
+  await expect(sender.getByText('Room reopened. Waiting for the receiving browser to reconnect.')).toBeVisible();
+  await expect(sender.getByText('Devices connected. The direct path is ready.')).toBeVisible({ timeout: 12_000 });
+  await sender.getByRole('button', { name: 'Send 1 file' }).click();
+  await expect(sender.getByText(`Resuming resume.bin at ${Math.round(persistedOffset / 1024)} KB.`)).toBeVisible({ timeout: 12_000 });
+  await expect(receiver.getByRole('heading', { name: 'Transfer finished' })).toBeVisible({ timeout: 20_000 });
+  await expect(sender.getByRole('heading', { name: 'Transfer finished' })).toBeVisible({ timeout: 20_000 });
   await receiverContext.close();
   await senderContext.close();
 });
@@ -508,11 +552,13 @@ test('the saved room code is visible, documented, and removable @claim:room-code
   await page.locator('#file-input').setInputFiles({ name: 'room-note.txt', mimeType: 'text/plain', buffer: Buffer.from('keep only the code') });
   await page.getByRole('button', { name: 'Make a six-word room' }).click();
   await expect.poll(() => page.evaluate(() => localStorage.getItem('friend-file-drop:last-room'))).toMatch(/^[a-z]+(?:-[a-z]+){5}$/);
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('friend-file-drop:last-transfer'))).toContain('room-note.txt');
   await page.locator('.resume-room summary').click();
   await page.getByRole('button', { name: 'Clear saved room code' }).click();
   await expect.poll(() => page.evaluate(() => localStorage.getItem('friend-file-drop:last-room'))).toBeNull();
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('friend-file-drop:last-transfer'))).toBeNull();
   await page.goto('/privacy');
-  await expect(page.getByText('The most recent room code stays in this browser\'s local storage')).toBeVisible();
+  await expect(page.getByText('The most recent room code and its file names, sizes, hashes, and transfer IDs stay in this browser\'s local storage.')).toBeVisible();
 });
 
 test('privacy boundaries match storage and loaded resources @claim:privacy-boundaries', async ({ page }) => {

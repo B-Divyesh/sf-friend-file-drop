@@ -67,7 +67,7 @@
     "claim": "A rejoined direct transfer resumes from chunks saved in IndexedDB.",
     "where": "transfer status, privacy page, and README",
     "test": "npm test -- --grep @claim:resumable-transfer",
-    "sandbox": "seed one verified 32 KB chunk in receiver IndexedDB, rejoin the same room, and assert resume at that offset"
+    "sandbox": "two fresh browser contexts; establish a direct transfer, persist real received chunks, reload and visibly rejoin the receiver, reload and reopen the sender with the same file, and assert the saved offset is used"
   },
   {
     "id": "local-receipts",

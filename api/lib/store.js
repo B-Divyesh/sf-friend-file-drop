@@ -37,7 +37,9 @@ function clientIdentity(req = {}) {
 
 function makeRoom(code, offer, now = Date.now()) {
   if (!ROOM_PATTERN.test(code)) throw new Error('Use a valid six-word room code.');
-  const room = { offer, answer: null, relay: { sender: false, receiver: false }, manifest: null, files: new Map(), receipt: null, bytes: 0, expiresAt: now + TTL_MS };
+  // Offer versions let a room replace a dead WebRTC connection without
+  // replacing its room code (or the IndexedDB keys derived from that code).
+  const room = { offer, answer: null, offerVersion: 1, answerVersion: 0, rejoinVersion: 0, relay: { sender: false, receiver: false }, manifest: null, files: new Map(), receipt: null, bytes: 0, expiresAt: now + TTL_MS };
   rooms.set(code, room);
   return room;
 }
@@ -53,6 +55,9 @@ function publicRoom(room) {
   return {
     offer: room.offer,
     answer: room.answer,
+    offerVersion: room.offerVersion || 1,
+    answerVersion: room.answerVersion || 0,
+    rejoinVersion: room.rejoinVersion || 0,
     relay: { ...room.relay, ready: room.relay.sender && room.relay.receiver },
     manifest: room.manifest,
     receipt: room.receipt

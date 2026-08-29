@@ -35,6 +35,23 @@ test('room API signals, requires dual relay consent, relays, and clears bytes', 
   assert.equal(store.rooms.get(code).files.size, 0);
 });
 
+test('an established room replaces only its direct offer when a peer rejoins @regression:room-reopen-generation', async () => {
+  store.rooms.clear();
+  let response = await call(roomsHandler, { code }, { method: 'POST', body: { action: 'create', offer: { type: 'offer', sdp: 'first-offer' } } });
+  assert.equal(response.body.offerVersion, 1);
+  await call(roomsHandler, { code }, { method: 'POST', body: { action: 'answer', offerVersion: 1, answer: { type: 'answer', sdp: 'first-answer' } } });
+  response = await call(roomsHandler, { code }, { method: 'POST', body: { action: 'rejoin' } });
+  assert.equal(response.body.rejoinVersion, 1);
+  response = await call(roomsHandler, { code }, { method: 'POST', body: { action: 'reopen', offer: { type: 'offer', sdp: 'second-offer' } } });
+  assert.equal(response.body.offerVersion, 2);
+  assert.equal(response.body.answer, null);
+  response = await call(roomsHandler, { code }, { method: 'POST', body: { action: 'answer', offerVersion: 1, answer: { type: 'answer', sdp: 'stale-answer' } } });
+  assert.equal(response.status, 400);
+  response = await call(roomsHandler, { code }, { method: 'POST', body: { action: 'answer', offerVersion: 2, answer: { type: 'answer', sdp: 'second-answer' } } });
+  assert.equal(response.status, 200);
+  assert.equal(response.body.answer.sdp, 'second-answer');
+});
+
 test('concurrent relay-consent updates retain both choices @regression:durable-room-consent', async () => {
   store.rooms.clear();
   await call(roomsHandler, { code }, { method: 'POST', body: { action: 'create', offer: { type: 'offer', sdp: 'local' } } });

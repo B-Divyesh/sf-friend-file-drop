@@ -4,6 +4,9 @@ import type { SavedReceipt } from './db';
 export type RoomStatus = {
   offer?: RTCSessionDescriptionInit;
   answer?: RTCSessionDescriptionInit;
+  offerVersion?: number;
+  answerVersion?: number;
+  rejoinVersion?: number;
   relay: { sender: boolean; receiver: boolean; ready: boolean };
   manifest?: FileManifest[];
   receipt?: SavedReceipt;

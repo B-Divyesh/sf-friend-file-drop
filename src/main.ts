@@ -3,6 +3,30 @@ import { getReceipts, saveReceipt, type SavedReceipt } from './db';
 import { buildManifest, DirectTransfer, makeRoomCode, validRoomCode, type FileManifest } from './transfer';
 
 type Route = 'home' | 'demo' | 'privacy' | 'terms' | 'not-found';
+type SavedSenderTransfer = { code: string; manifests: FileManifest[] };
+
+const LAST_ROOM_KEY = 'friend-file-drop:last-room';
+const LAST_TRANSFER_KEY = 'friend-file-drop:last-transfer';
+
+function savedSenderTransfer(): SavedSenderTransfer | undefined {
+  try {
+    const value = JSON.parse(localStorage.getItem(LAST_TRANSFER_KEY) || '') as SavedSenderTransfer;
+    if (validRoomCode(value.code) && Array.isArray(value.manifests)) return value;
+  } catch { /* A stale local value must never stop choosing files. */ }
+  return undefined;
+}
+
+function restoreManifestIds(files: File[], fresh: FileManifest[]): FileManifest[] {
+  const saved = savedSenderTransfer();
+  if (!saved || saved.manifests.length !== fresh.length) return fresh;
+  const sameFiles = saved.manifests.every((previous, index) => {
+    const current = fresh[index];
+    return previous.name === current.name && previous.type === current.type && previous.size === current.size && previous.hash === current.hash;
+  });
+  // A browser cannot persist a File. It can safely retain this tiny matching
+  // manifest so re-selecting the same source file keeps its resume key.
+  return sameFiles ? fresh.map((current, index) => ({ ...current, id: saved.manifests[index].id })) : fresh;
+}
 
 const app = document.querySelector<HTMLDivElement>('#app')!;
 const titles: Record<Route, string> = {
@@ -134,7 +158,7 @@ function demoPage(): string {
 }
 
 function legalPage(kind: 'privacy' | 'terms'): string {
-  const privacy = `<article class="legal-sheet"><p class="eyebrow">Plain-language policy · 28 August 2026</p><h1 tabindex="-1">Know what each transfer shares</h1><p class="lead">Friend File Drop uses a short-lived room service to connect two browsers.</p><h2>Direct transfers</h2><p>The room service receives the six-word code, network address, and WebRTC connection details. File names, hashes, contents, and receipts travel through the paired WebRTC connection.</p><h2>Relay transfers</h2><p>The relay is used only after both people choose it. It then receives the file manifest and contents over HTTPS. It limits each room to 25 MB and removes file bytes after the receipt or room expiry.</p><h2>What stays on this device</h2><p>Finished receipts use this browser's IndexedDB. Incomplete direct-transfer chunks stay there for resume. Demo receipts use a separate session-only key. The most recent room code stays in this browser's local storage so you can reopen it. It is replaced by the next room code, and you can clear it from the transfer sheet or by clearing site data.</p><h2>Tracking and contacts</h2><p>The app has no analytics, advertising, third-party runtime scripts, or contact access.</p><h2>Contact</h2><p>Privacy questions can be sent to <a href="mailto:privacy@sociobot.in">privacy@sociobot.in</a>.</p></article>`;
+  const privacy = `<article class="legal-sheet"><p class="eyebrow">Plain-language policy · 28 August 2026</p><h1 tabindex="-1">Know what each transfer shares</h1><p class="lead">Friend File Drop uses a short-lived room service to connect two browsers.</p><h2>Direct transfers</h2><p>The room service receives the six-word code, network address, and WebRTC connection details. File names, hashes, contents, and receipts travel through the paired WebRTC connection.</p><h2>Relay transfers</h2><p>The relay is used only after both people choose it. It then receives the file manifest and contents over HTTPS. It limits each room to 25 MB and removes file bytes after the receipt or room expiry.</p><h2>What stays on this device</h2><p>Finished receipts use this browser's IndexedDB. Incomplete direct-transfer chunks stay there for resume. Demo receipts use a separate session-only key. The most recent room code and its file names, sizes, hashes, and transfer IDs stay in this browser's local storage. This lets a sender reselect the same files and reopen the room. The next room replaces this data, and you can clear it from the transfer sheet or by clearing site data.</p><h2>Tracking and contacts</h2><p>The app has no analytics, advertising, third-party runtime scripts, or contact access.</p><h2>Contact</h2><p>Privacy questions can be sent to <a href="mailto:privacy@sociobot.in">privacy@sociobot.in</a>.</p></article>`;
   const terms = `<article class="legal-sheet"><p class="eyebrow">Terms · 28 August 2026</p><h1 tabindex="-1">Use Friend File Drop with care</h1><p class="lead">You may use this free tool to send files you have the right to share.</p><h2>Your responsibility</h2><p>Do not send illegal, harmful, or unwanted material. Confirm the six words with your intended recipient.</p><h2>Availability</h2><p>The tool is provided as-is. Browser, device, and network limits can interrupt a transfer. Keep the original file until the receipt appears.</p><h2>Temporary relay custody</h2><p>If both people choose the relay, it temporarily holds file bytes. A local receipt is not a backup of file contents.</p><h2>Contact</h2><p>Terms questions can be sent to <a href="mailto:hello@sociobot.in">hello@sociobot.in</a>.</p></article>`;
   return shell(`<main id="main" class="legal-main">${kind === 'privacy' ? privacy : terms}</main>`);
 }
@@ -286,7 +310,7 @@ function setupTransferApp(): void {
       const list = panel.querySelector<HTMLUListElement>('#real-files')!;
       list.innerHTML = '<li class="empty-state">Calculating SHA-256 hashes…</li>';
       try {
-        manifests = await buildManifest(files);
+        manifests = restoreManifestIds(files, await buildManifest(files));
         list.innerHTML = manifests.map((file) => fileRow(file, true)).join('');
         list.querySelectorAll<HTMLButtonElement>('[data-remove]').forEach((button) => button.addEventListener('click', () => {
           const index = manifests.findIndex((item) => item.id === button.dataset.remove);
@@ -306,16 +330,18 @@ function setupTransferApp(): void {
   function renderPairing(): void {
     const area = root!.querySelector<HTMLDivElement>('#pairing-area')!;
     if (!files.length) { area.innerHTML = ''; return; }
-    const previousRoom = localStorage.getItem('friend-file-drop:last-room') || '';
+    const previousRoom = localStorage.getItem(LAST_ROOM_KEY) || '';
     area.innerHTML = `<section class="pair-sheet" aria-labelledby="pair-title"><h3 id="pair-title">Pair the receiving browser</h3><ol class="pair-steps"><li><button class="button primary" type="button" id="make-room">Make a six-word room</button><details class="resume-room"><summary>Resume a previous room</summary><label for="resume-code">Previous room code</label><input id="resume-code" class="room-input" value="${escapeText(previousRoom)}" autocomplete="off" spellcheck="false" /><button class="text-button" id="resume-room" type="button">Reopen this room</button><button class="text-button" id="forget-room" type="button">Clear saved room code</button></details><div id="offer-box"></div></li><li><p>Tell the receiver the six words. This room expires after 15 minutes.</p><details class="relay-choice"><summary>Direct path not working?</summary><p>The relay receives file names, hashes, contents, IP addresses, and byte counts. It holds up to 25 MB until the receipt or room expiry.</p><button class="button secondary" type="button" id="sender-relay" disabled>Use the private relay</button></details></li><li><button class="button primary" type="button" id="send-now" disabled>Send ${files.length} file${files.length === 1 ? '' : 's'}</button><p id="real-state" class="state-note" role="status">Make a room to start pairing.</p></li></ol></section>`;
-    const openRoom = async (code: string) => {
+    const openRoom = async (code: string, reopen = false) => {
       roomCode = code;
       transfer = new DirectTransfer(roomCode, hooks());
       const state = area.querySelector<HTMLElement>('#real-state')!;
       state.textContent = 'Opening the short-lived room…';
       try {
-        await transfer.createRoom();
-        localStorage.setItem('friend-file-drop:last-room', roomCode);
+        if (reopen) await transfer.reopenRoom();
+        else await transfer.createRoom();
+        localStorage.setItem(LAST_ROOM_KEY, roomCode);
+        localStorage.setItem(LAST_TRANSFER_KEY, JSON.stringify({ code: roomCode, manifests } satisfies SavedSenderTransfer));
         area.querySelector<HTMLDivElement>('#offer-box')!.innerHTML = `<div class="room-label"><span>Room code</span><strong>${roomCode}</strong></div><button class="text-button copy-code" type="button">Copy room code</button>`;
         area.querySelector('.copy-code')?.addEventListener('click', async () => { await navigator.clipboard.writeText(roomCode); state.textContent = 'Room code copied. Send the six words to the receiver.'; });
         area.querySelector<HTMLButtonElement>('#sender-relay')!.disabled = false;
@@ -334,10 +360,11 @@ function setupTransferApp(): void {
         return;
       }
       input.removeAttribute('aria-invalid');
-      void openRoom(code);
+      void openRoom(code, true);
     });
     area.querySelector('#forget-room')?.addEventListener('click', () => {
-      localStorage.removeItem('friend-file-drop:last-room');
+      localStorage.removeItem(LAST_ROOM_KEY);
+      localStorage.removeItem(LAST_TRANSFER_KEY);
       const input = area.querySelector<HTMLInputElement>('#resume-code');
       if (input) input.value = '';
       hooks().onState('Saved room code cleared from this browser.', 'success');

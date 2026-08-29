@@ -92,7 +92,7 @@ async function rateLimit(identity, now = Date.now()) {
 }
 
 function newRoom(offer, now) {
-  return { offer, answer: null, relay: { sender: false, receiver: false }, manifest: null, receipt: null, bytes: 0, expiresAt: now + memory.TTL_MS };
+  return { offer, answer: null, offerVersion: 1, answerVersion: 0, rejoinVersion: 0, relay: { sender: false, receiver: false }, manifest: null, receipt: null, bytes: 0, expiresAt: now + memory.TTL_MS };
 }
 
 async function makeRoom(code, offer, now = Date.now()) {

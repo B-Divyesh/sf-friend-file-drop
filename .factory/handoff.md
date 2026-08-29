@@ -1,44 +1,55 @@
-# Friend File Drop verification 9 handoff
+# Friend File Drop repair 11 handoff
 
-## Outcome: **FAIL**
+## Outcome: repaired locally; deployment queued by push
 
-Candidate: `4fd5dc0c8b192e9bf0ad0771fcf60a017e01ee93`
+Base reviewed: `1402cf771243a1470d29eabbe029e3076bad6afd` (verification 9)
 
-Live URL: <https://friend-file-drop.sociobot.in>
+## Release-blocking repair
 
-Verified: 2026-08-29 UTC
+The verifier's exact failure was reproduced from its report: the old room protocol held a single offer/answer, so a receiver reload could only answer a dead offer; sender **Reopen this room** also incorrectly sent `create` and collided with the existing room.
 
-The live static app, service worker, and managed API match the requested candidate. The prior deployment-only relay failure is repaired: the full live suite passed 9/9, and the real durable relay flow passed another 4/4 runs with two workers.
+The repair keeps the room code and file identity stable while replacing only the WebRTC negotiation:
 
-Release is still blocked by a newly reproduced core defect: an established direct transfer cannot reconnect or resume. After the receiver reloads and joins the same six-word room, the sender remains **Connection paused** with sending disabled while the receiver remains **Opening the direct path…**. If the sender reloads and uses **Resume a previous room → Reopen this room**, the API returns HTTP 400: **That room code is already in use. Make a new room.**
+- Rooms now expose `offerVersion`, `answerVersion`, and `rejoinVersion`. A receiver rejoin requests a fresh offer; the open sender detects it and publishes one. A stale answer is rejected.
+- **Reopen this room** publishes a new versioned offer in the existing room, instead of trying to create the room again. A connected receiver watches for the new version and answers it.
+- The sender stores only the latest room's manifest metadata (name, size, hash, transfer ID) in local storage. After reload, reselecting the same files restores their IDs, so receiver IndexedDB partial chunks remain addressable. Clearing the saved room clears this metadata too.
+- Privacy and README copy disclose that local metadata. No file bytes are stored in local storage.
 
-This violates the researched brief's resumable-transfer requirement. The current `@claim:resumable-transfer` test is a false positive because it seeds a chunk before the receiver's first connection instead of interrupting and rejoining an established peer.
+## Regression evidence
 
-Full evidence and required repairs are in [`.factory/verification-9.md`](verification-9.md). Failure screenshots are in `.factory/verification-9-assets/`.
+`tests/product.spec.ts` replaces the former seeded-chunk false positive with `@claim:resumable-transfer @regression:established-direct-interruption`. It creates a real 8 MiB direct transfer, waits until actual chunks are saved, reloads and visibly rejoins the receiver, reloads the sender, reselects the same file, uses **Resume a previous room → Reopen this room**, asserts the original transfer ID remains, and verifies the final send starts at the real saved IndexedDB offset before both receipt screens finish.
 
-## Verification summary
+The lower-level API guard is covered by `@regression:room-reopen-generation`: it proves fresh offer versions retain the room and reject a stale answer.
 
-- All 21 exact `.factory/claims.json` commands: PASS.
-- Cold first-read and one-click sample demo: PASS.
-- `npm ci`, `npm test`, `npm run lint`, exact production build, and production audits: PASS.
-- Live deployment identity: exact candidate SHA and byte-matching static artifacts.
-- Live suite: 9/9 PASS; durable relay concurrency repeat: 4/4 PASS.
-- Independent invalid-input recovery and zero-byte direct transfer: PASS.
-- API allowance: 90 requests per 60 seconds; request 91 returns 429 with `Retry-After: 60`.
-- Offline service-worker reload/update: PASS.
-- Axe serious/critical: 0 on all routes and 404.
-- Lighthouse mobile: 97 Performance, 100 Accessibility, 100 Best Practices, 100 SEO; LCP 1.3 s, CLS 0.
-- Direct disconnect/rejoin and sender room reopen: **FAIL — release-blocking**.
+## Local verification
 
-## Re-run
+Run from a clean install:
 
 ```sh
 npm ci
 npm test
 npm run lint
 npm run build
+npm audit --omit=dev --audit-level=high
+npm audit --prefix api --omit=dev --audit-level=high
+```
+
+Evidence on 2026-08-29 UTC:
+
+- `npm ci`: pass; root and API production audits report 0 vulnerabilities.
+- `npm test`: pass: 13 Node/API/config tests; local Chromium suite passes including all claims, offline/service-worker, direct, relay, privacy, accessibility, keyboard, 390 px, and 200% text checks. The nine live-only tests are skipped without `LIVE_URL`, by design.
+- `npm run lint`: pass (`tsc --noEmit`).
+- `npm run build`: pass; `dist/index.html` is present. JS is 41.19 kB (13.11 kB gzip); CSS is 17.31 kB (4.87 kB gzip).
+- `/opt/fleet/lib/verify-url.sh http://127.0.0.1:4173 <temp-dir>`: pass; 553 ms load, no console/page errors, title/lang/main, one h1, image alt text, and labelled buttons all verified.
+- The project's Playwright Axe checks report zero serious/critical findings on `/`, `/demo`, `/privacy`, and `/terms`. The standalone `@axe-core/cli` invocation was attempted but this container's Selenium wrapper could not locate a Chrome binary; it did not indicate a product finding.
+
+## Deployment and remaining verification
+
+This is the existing static/PWA artifact class: deploy `dist/` together with the managed `api/` functions using the repository's Static Web Apps workflow. The repair commit is pushed to `main`, which is the configured factory deploy source. After the deploy reports its revision, run:
+
+```sh
 LIVE_URL=https://friend-file-drop.sociobot.in npx playwright test tests/live.spec.ts --reporter=list
 curl -fsS https://friend-file-drop.sociobot.in/api/health
 ```
 
-Add a regression that establishes a connection, interrupts a partially transferred file, reloads one peer, uses the visible rejoin/reopen controls, and proves transfer continues from the saved offset. Do not accept the release until that test passes locally and against production.
+The prior live revision cannot prove this repair before that deployment lands. There are no known product gaps in the local artifact.

@@ -49,7 +49,7 @@ async function waitForIce(peer: RTCPeerConnection): Promise<void> {
 }
 
 export class DirectTransfer {
-  private peer = new RTCPeerConnection({ iceServers: [] });
+  private peer!: RTCPeerConnection;
   private channel?: RTCDataChannel;
   private room: RoomService;
   private incoming = new Map<string, { manifest: FileManifest; chunks: ArrayBuffer[]; received: number }>();
@@ -59,16 +59,36 @@ export class DirectTransfer {
   private receiveQueue = Promise.resolve();
   private resumeWaiters = new Map<string, (offset: number) => void>();
   private transferState: TransferState = { path: 'direct', phase: 'pairing' };
+  private role?: 'sender' | 'receiver';
+  private offerVersion = 0;
+  private handledRejoinVersion = 0;
+  private watching = false;
+  private replacingOffer = false;
 
   constructor(private roomCode: string, private hooks: TransferHooks) {
     this.room = new RoomService(roomCode);
-    this.peer.onconnectionstatechange = () => {
-      const state = this.peer.connectionState;
+    this.replacePeer();
+  }
+
+  private replacePeer(): void {
+    this.channel?.close();
+    if (this.peer) {
+      this.peer.onconnectionstatechange = null;
+      this.peer.ondatachannel = null;
+      this.peer.close();
+    }
+    const peer = new RTCPeerConnection({ iceServers: [] });
+    this.peer = peer;
+    peer.onconnectionstatechange = () => {
+      if (this.peer !== peer) return;
+      const state = peer.connectionState;
       if (state === 'connected') this.setDirectState('ready', 'Devices connected. The direct path is ready.', 'success');
       if (state === 'failed') this.setDirectState('failed', 'The direct path failed. Choose the private relay below on both devices.', 'error');
       if (state === 'disconnected') this.setDirectState('paused', 'Connection paused. Rejoin this room to resume saved chunks.', 'note');
     };
-    this.peer.ondatachannel = (event) => this.attachChannel(event.channel);
+    peer.ondatachannel = (event) => {
+      if (this.peer === peer) this.attachChannel(event.channel);
+    };
   }
 
   private setState(next: TransferState, message?: string, tone: 'note' | 'error' | 'success' = 'note'): boolean {
@@ -114,37 +134,94 @@ export class DirectTransfer {
     };
   }
 
-  async createRoom(): Promise<void> {
+  private async publishOffer(action: 'create' | 'reopen'): Promise<void> {
+    this.replacePeer();
     this.attachChannel(this.peer.createDataChannel('files', { ordered: true }));
     await this.peer.setLocalDescription(await this.peer.createOffer());
     await waitForIce(this.peer);
-    await this.room.post('create', { offer: this.peer.localDescription });
+    const status = await this.room.post(action, { offer: this.peer.localDescription });
+    this.offerVersion = status.offerVersion || (action === 'create' ? 1 : this.offerVersion + 1);
+    this.handledRejoinVersion = status.rejoinVersion || this.handledRejoinVersion;
+  }
+
+  async createRoom(): Promise<void> {
+    this.role = 'sender';
+    await this.publishOffer('create');
     this.setDirectState('pairing', 'Room ready. Share only the six words with the receiver.');
-    void this.waitForAnswer();
+    this.startWatcher();
   }
 
-  private async waitForAnswer(): Promise<void> {
-    for (let attempt = 0; attempt < 180; attempt += 1) {
-      if (this.transferState.path !== 'direct') return;
-      const status = await this.room.status().catch(() => undefined);
-      if (this.transferState.path !== 'direct') return;
-      if (status?.answer && !this.peer.remoteDescription) {
-        await this.peer.setRemoteDescription(status.answer);
-        this.setDirectState('opening', 'Receiver joined. Opening the direct path…');
-        return;
-      }
-      await delay(1000);
-    }
+  async reopenRoom(): Promise<void> {
+    this.role = 'sender';
+    await this.publishOffer('reopen');
+    this.setDirectState('pairing', 'Room reopened. Waiting for the receiving browser to reconnect.');
+    this.startWatcher();
   }
 
-  async joinRoom(): Promise<void> {
-    const status = await this.room.status();
+  private async acceptOffer(status: RoomStatus): Promise<void> {
     if (!status.offer) throw new Error('That room is not ready. Check the six words and try again.');
+    this.replacePeer();
     await this.peer.setRemoteDescription(status.offer);
     await this.peer.setLocalDescription(await this.peer.createAnswer());
     await waitForIce(this.peer);
-    await this.room.post('answer', { answer: this.peer.localDescription });
+    await this.room.post('answer', { answer: this.peer.localDescription, offerVersion: status.offerVersion || 1 });
+    this.offerVersion = status.offerVersion || 1;
     this.setDirectState('opening', 'Room joined. Opening the direct path…');
+  }
+
+  async joinRoom(): Promise<void> {
+    this.role = 'receiver';
+    const status = await this.room.status();
+    if (!status.offer) throw new Error('That room is not ready. Check the six words and try again.');
+    // An answer means this room has already had a peer. Ask the still-open
+    // sender to replace its now-dead connection before answering again.
+    if (status.answer) {
+      await this.room.post('rejoin');
+      this.offerVersion = status.offerVersion || 1;
+      this.setDirectState('opening', 'Rejoining the room. Waiting for a fresh direct path…');
+    } else {
+      await this.acceptOffer(status);
+    }
+    this.startWatcher();
+  }
+
+  private startWatcher(): void {
+    if (this.watching) return;
+    this.watching = true;
+    void this.watchRoom();
+  }
+
+  private async watchRoom(): Promise<void> {
+    for (let attempt = 0; attempt < 900; attempt += 1) {
+      if (this.transferState.path !== 'direct') return;
+      const status = await this.room.status().catch(() => undefined);
+      if (!status || this.transferState.path !== 'direct') {
+        await delay(1000);
+        continue;
+      }
+      try {
+        if (this.role === 'sender') {
+          if ((status.rejoinVersion || 0) > this.handledRejoinVersion && !this.replacingOffer) {
+            this.replacingOffer = true;
+            this.handledRejoinVersion = status.rejoinVersion || this.handledRejoinVersion;
+            this.setDirectState('opening', 'Receiver is rejoining. Creating a fresh direct path…');
+            await this.publishOffer('reopen');
+            this.setDirectState('pairing', 'Fresh direct path ready. Waiting for the receiver to reconnect.');
+            this.replacingOffer = false;
+          }
+          if (status.answer && (status.answerVersion || 1) === this.offerVersion && !this.peer.remoteDescription) {
+            await this.peer.setRemoteDescription(status.answer);
+            this.setDirectState('opening', 'Receiver joined. Opening the direct path…');
+          }
+        } else if (this.role === 'receiver' && status.offer && (status.offerVersion || 1) > this.offerVersion) {
+          await this.acceptOffer(status);
+        }
+      } catch (error) {
+        this.replacingOffer = false;
+        this.setDirectState('failed', error instanceof Error ? error.message : 'The direct path could not reconnect. Rejoin this room to try again.', 'error');
+      }
+      await delay(1000);
+    }
   }
 
   async enableRelay(role: 'sender' | 'receiver'): Promise<void> {
