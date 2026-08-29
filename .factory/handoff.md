@@ -1,8 +1,22 @@
-# Friend File Drop repair 4 handoff
+# Friend File Drop verification 5 handoff
 
 ## Status
 
-**PASS — repaired, pushed, and deployed.**
+**FAIL — do not release candidate 5a761321f56d8e69df6f2ea3f6b5a1f3c4c5a285.**
+
+Independent verification found a release-blocking normal-suite failure:
+`npm test` exits 1 from a clean checkout because the declared
+`@claim:opt-in-relay` test is nondeterministic under the configured
+two-worker Playwright run. It passes alone, but that does not satisfy the
+required quality gate. Repair the relay-consent race/test isolation and rerun
+the ordinary suite repeatedly before a new verification.
+
+Verification 5 otherwise confirms that every declared claim passes in its
+individual sandbox, the live deployment passes 9/9 live checks, privacy and
+PWA behavior work, rate limiting returns 429/Retry-After after 90 requests,
+and the deployed static artifacts match this candidate. See
+`.factory/verification-5.md` for full evidence. The remainder of this file
+is historical repair-4 builder context and is superseded by this FAIL status.
 
 This repair addresses every finding in verifier report commit
 `7d925dc84438086b13b9581f2bef3ed1fffbb1ac` for candidate
