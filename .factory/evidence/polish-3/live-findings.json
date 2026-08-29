@@ -1,0 +1,37 @@
+{
+  "demoFirst": {
+    "url": "/?demo=1",
+    "firstRow": true,
+    "action": true,
+    "banner": true,
+    "status": "Ready. The sample makes no API request and uses no files from your device.",
+    "rows": [
+      "picnic-table.jpg",
+      "family-recipes.pdf",
+      "read-me-first.txt"
+    ]
+  },
+  "demoScrolled": {
+    "top": 0,
+    "bottom": 87.34375,
+    "viewport": 844,
+    "visible": true
+  },
+  "blockedRequests": [],
+  "desktopFacts": [
+    { "text": "No account or app", "bottom": 710.453125, "visible": true },
+    { "text": "Files go direct when browsers connect", "bottom": 741.21875, "visible": true },
+    { "text": "Free to use", "bottom": 741.21875, "visible": true }
+  ],
+  "privacy": {
+    "direct": true,
+    "relay": true,
+    "oldEncrypted": false
+  },
+  "notFound": {
+    "status": 404,
+    "heading": "Page not found",
+    "title": "Page not found — Friend File Drop"
+  },
+  "copy": { "oldTermsAbsent": true }
+}
