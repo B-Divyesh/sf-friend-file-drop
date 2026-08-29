@@ -15,6 +15,10 @@ const WORDS = ['amber', 'apple', 'atlas', 'birch', 'blue', 'brisk', 'cedar', 'ch
 const ROOM_PATTERN = /^[a-z]+(?:-[a-z]+){5}$/;
 const delay = (milliseconds: number) => new Promise((resolve) => window.setTimeout(resolve, milliseconds));
 
+type TransferState =
+  | { path: 'direct'; phase: 'pairing' | 'opening' | 'ready' | 'paused' | 'failed' }
+  | { path: 'relay'; phase: 'consenting' | 'waiting' | 'ready' | 'transferring' | 'complete' | 'error'; role: 'sender' | 'receiver' };
+
 export function makeRoomCode(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(6));
   return [...bytes].map((byte) => WORDS[byte % WORDS.length]).join('-');
@@ -54,35 +58,48 @@ export class DirectTransfer {
   private currentFile = '';
   private receiveQueue = Promise.resolve();
   private resumeWaiters = new Map<string, (offset: number) => void>();
-  private relayReady = false;
-  private relayRole?: 'sender' | 'receiver';
+  private transferState: TransferState = { path: 'direct', phase: 'pairing' };
 
   constructor(private roomCode: string, private hooks: TransferHooks) {
     this.room = new RoomService(roomCode);
     this.peer.onconnectionstatechange = () => {
       const state = this.peer.connectionState;
-      // Once either person has chosen the relay, its explicit-consent status is
-      // the useful state. A late WebRTC event must not hide it.
-      if (this.relayRole) return;
-      if (state === 'connected') this.hooks.onState('Devices connected. The direct path is ready.', 'success');
-      if (state === 'failed') this.hooks.onState('The direct path failed. Choose the private relay below on both devices.', 'error');
-      if (state === 'disconnected') this.hooks.onState('Connection paused. Rejoin this room to resume saved chunks.', 'note');
+      if (state === 'connected') this.setDirectState('ready', 'Devices connected. The direct path is ready.', 'success');
+      if (state === 'failed') this.setDirectState('failed', 'The direct path failed. Choose the private relay below on both devices.', 'error');
+      if (state === 'disconnected') this.setDirectState('paused', 'Connection paused. Rejoin this room to resume saved chunks.', 'note');
     };
     this.peer.ondatachannel = (event) => this.attachChannel(event.channel);
+  }
+
+  private setState(next: TransferState, message?: string, tone: 'note' | 'error' | 'success' = 'note'): boolean {
+    // Relay selection is a one-way user decision for this transfer. No
+    // callback or in-flight direct request may move the UI back to direct.
+    if (this.transferState.path === 'relay' && next.path === 'direct') return false;
+    this.transferState = next;
+    if (message) this.hooks.onState(message, tone);
+    return true;
+  }
+
+  private setDirectState(phase: Extract<TransferState, { path: 'direct' }>['phase'], message: string, tone: 'note' | 'error' | 'success' = 'note'): boolean {
+    return this.setState({ path: 'direct', phase }, message, tone);
+  }
+
+  private setRelayState(phase: Extract<TransferState, { path: 'relay' }>['phase'], role: 'sender' | 'receiver', message?: string, tone: 'note' | 'error' | 'success' = 'note'): boolean {
+    return this.setState({ path: 'relay', phase, role }, message, tone);
   }
 
   private attachChannel(channel: RTCDataChannel): void {
     this.channel = channel;
     channel.binaryType = 'arraybuffer';
     channel.onopen = () => {
-      if (!this.relayRole) this.hooks.onState('Devices connected. The direct path is ready.', 'success');
+      this.setDirectState('ready', 'Devices connected. The direct path is ready.', 'success');
     };
     channel.onerror = () => {
-      if (!this.relayRole) this.hooks.onState('The direct path stopped. Rejoin to resume, or choose the relay.', 'error');
+      this.setDirectState('failed', 'The direct path stopped. Rejoin to resume, or choose the relay.', 'error');
     };
     channel.onmessage = (event) => {
       this.receiveQueue = this.receiveQueue.then(() => this.receive(event.data)).catch(() => {
-        this.hooks.onState('A received chunk could not be saved. Rejoin the room to resume.', 'error');
+        this.setDirectState('failed', 'A received chunk could not be saved. Rejoin the room to resume.', 'error');
       });
     };
   }
@@ -92,16 +109,18 @@ export class DirectTransfer {
     await this.peer.setLocalDescription(await this.peer.createOffer());
     await waitForIce(this.peer);
     await this.room.post('create', { offer: this.peer.localDescription });
-    this.hooks.onState('Room ready. Share only the six words with the receiver.');
+    this.setDirectState('pairing', 'Room ready. Share only the six words with the receiver.');
     void this.waitForAnswer();
   }
 
   private async waitForAnswer(): Promise<void> {
     for (let attempt = 0; attempt < 180; attempt += 1) {
+      if (this.transferState.path !== 'direct') return;
       const status = await this.room.status().catch(() => undefined);
+      if (this.transferState.path !== 'direct') return;
       if (status?.answer && !this.peer.remoteDescription) {
         await this.peer.setRemoteDescription(status.answer);
-        this.hooks.onState('Receiver joined. Opening the direct path…');
+        this.setDirectState('opening', 'Receiver joined. Opening the direct path…');
         return;
       }
       await delay(1000);
@@ -115,18 +134,23 @@ export class DirectTransfer {
     await this.peer.setLocalDescription(await this.peer.createAnswer());
     await waitForIce(this.peer);
     await this.room.post('answer', { answer: this.peer.localDescription });
-    this.hooks.onState('Room joined. Opening the direct path…');
+    this.setDirectState('opening', 'Room joined. Opening the direct path…');
   }
 
   async enableRelay(role: 'sender' | 'receiver'): Promise<void> {
-    this.relayRole = role;
-    await this.room.post('relay-consent', { role });
-    this.hooks.onState('Relay chosen. Waiting for the other person to choose it too.');
+    if (this.transferState.path === 'relay' && this.transferState.phase !== 'error') return;
+    this.setRelayState('consenting', role, 'Saving your relay choice…');
+    try {
+      await this.room.post('relay-consent', { role });
+    } catch (error) {
+      this.setRelayState('error', role);
+      throw error;
+    }
+    this.setRelayState('waiting', role, 'Relay chosen. Waiting for the other person to choose it too.');
     for (let attempt = 0; attempt < 180; attempt += 1) {
       const status = await this.room.status();
       if (status.relay.ready) {
-        this.relayReady = true;
-        this.hooks.onState('Relay ready. It will hold this transfer for up to 15 minutes.', 'success');
+        this.setRelayState('ready', role, 'Relay ready. It will hold this transfer for up to 15 minutes.', 'success');
         if (role === 'receiver') void this.receiveRelay();
         return;
       }
@@ -136,6 +160,7 @@ export class DirectTransfer {
   }
 
   private async receiveRelay(): Promise<void> {
+    this.setRelayState('transferring', 'receiver');
     for (let attempt = 0; attempt < 180; attempt += 1) {
       const status = await this.room.status();
       if (!status.manifest) { await delay(1000); continue; }
@@ -156,12 +181,14 @@ export class DirectTransfer {
       const receipt: SavedReceipt = { id: crypto.randomUUID(), roomCode: this.roomCode, completedAt: new Date().toISOString(), direction: 'received', files: receivedFiles };
       this.hooks.onReceipt(receipt);
       await this.room.post('receipt', { receipt });
+      this.setRelayState('complete', 'receiver');
       return;
     }
   }
 
   get isReady(): boolean {
-    return this.channel?.readyState === 'open' || this.relayReady;
+    if (this.transferState.path === 'relay') return this.transferState.phase === 'ready';
+    return this.channel?.readyState === 'open';
   }
 
   get code(): string {
@@ -169,17 +196,19 @@ export class DirectTransfer {
   }
 
   async send(files: File[], manifests: FileManifest[]): Promise<void> {
-    if (this.relayReady && this.relayRole === 'sender') {
+    if (this.transferState.path === 'relay' && this.transferState.role === 'sender') {
+      if (this.transferState.phase !== 'ready') throw new Error('Wait for the other person to choose the relay before sending.');
+      this.setRelayState('transferring', 'sender');
       await this.room.post('manifest', { manifest: manifests });
       for (let index = 0; index < files.length; index += 1) {
         await this.room.uploadFile(manifests[index].id, files[index], (sent) => this.hooks.onProgress(manifests[index].id, sent, manifests[index].size));
       }
-      this.hooks.onState('Files uploaded. Waiting for the receiver to verify them.');
+      this.setRelayState('transferring', 'sender', 'Files uploaded. Waiting for the receiver to verify them.');
       for (let attempt = 0; attempt < 180; attempt += 1) {
         const status = await this.room.status();
         if (status.receipt) {
           this.hooks.onReceipt({ ...status.receipt, direction: 'sent' });
-          this.hooks.onState('The receiver verified every file.', 'success');
+          this.setRelayState('complete', 'sender', 'The receiver verified every file.', 'success');
           return;
         }
         await delay(1000);
@@ -263,7 +292,7 @@ export class DirectTransfer {
         this.verifiedIncoming.delete(message.id);
         this.failedIncoming.add(message.id);
         this.hooks.onFileError(entry.manifest);
-        this.hooks.onState(`${entry.manifest.name} did not match its hash. Rejoin to retry it.`, 'error');
+        this.setDirectState('failed', `${entry.manifest.name} did not match its hash. Rejoin to retry it.`, 'error');
         return;
       }
       await clearPartialChunks(this.roomCode, message.id);
@@ -275,7 +304,7 @@ export class DirectTransfer {
       const everyFileVerified = this.incoming.size > 0
         && [...this.incoming.keys()].every((id) => this.verifiedIncoming.has(id));
       if (!everyFileVerified) {
-        if (this.failedIncoming.size === 0) this.hooks.onState('The transfer ended before every file was verified. Rejoin to retry it.', 'error');
+        if (this.failedIncoming.size === 0) this.setDirectState('failed', 'The transfer ended before every file was verified. Rejoin to retry it.', 'error');
         return;
       }
       const files = [...this.incoming.values()].map(({ manifest }) => ({ name: manifest.name, size: manifest.size, hash: manifest.hash }));

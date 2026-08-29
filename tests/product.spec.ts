@@ -11,7 +11,11 @@ type MockRoom = {
   receipt?: unknown;
 };
 
-function installRoomApi(page: Page, rooms: Map<string, MockRoom>): Promise<void> {
+type RoomApiOptions = {
+  beforeStatus?: (room: MockRoom) => Promise<void>;
+};
+
+function installRoomApi(page: Page, rooms: Map<string, MockRoom>, options: RoomApiOptions = {}): Promise<void> {
   return page.route('**/api/rooms/**', async (route: Route) => {
     const request = route.request();
     const url = new URL(request.url());
@@ -44,6 +48,7 @@ function installRoomApi(page: Page, rooms: Map<string, MockRoom>): Promise<void>
       return json(200, { ...current, files: undefined, relay: { ...current.relay, ready: current.relay.sender && current.relay.receiver } });
     }
     if (!room) return json(404, { error: 'That room expired or does not exist.' });
+    await options.beforeStatus?.(room);
     return json(200, { ...room, files: undefined, relay: { ...room.relay, ready: room.relay.sender && room.relay.receiver } });
   });
 }
@@ -121,6 +126,55 @@ async function chooseRelay(pair: RelayPair): Promise<void> {
 async function closeRelayPair(pair: RelayPair): Promise<void> {
   await Promise.all([pair.senderContext.close(), pair.receiverContext.close()]);
 }
+
+test('late direct answer cannot replace relay consent state @regression:relay-consent-state-race', async ({ browser }) => {
+  const senderContext = await browser.newContext();
+  const receiverContext = await browser.newContext();
+  const sender = await senderContext.newPage();
+  const receiver = await receiverContext.newPage();
+  const rooms = new Map<string, MockRoom>();
+  let delayAnswer = false;
+  let answerWasHeld!: () => void;
+  let releaseAnswer!: () => void;
+  const heldAnswer = new Promise<void>((resolve) => { answerWasHeld = resolve; });
+  const answerGate = new Promise<void>((resolve) => { releaseAnswer = resolve; });
+  let held = false;
+
+  await installRoomApi(sender, rooms, {
+    beforeStatus: async (room) => {
+      if (!delayAnswer || !room.answer || held) return;
+      held = true;
+      answerWasHeld();
+      await answerGate;
+    }
+  });
+  await installRoomApi(receiver, rooms);
+
+  try {
+    await Promise.all([sender.goto('/'), receiver.goto('/')]);
+    await sender.locator('#file-input').setInputFiles({ name: 'race.txt', mimeType: 'text/plain', buffer: Buffer.from('relay state must win') });
+    await sender.getByRole('button', { name: 'Make a six-word room' }).click();
+    const code = await sender.locator('.room-label strong').innerText();
+    delayAnswer = true;
+    await receiver.getByRole('tab', { name: 'Receive files' }).click();
+    await receiver.locator('#room-code').fill(code);
+    await receiver.getByRole('button', { name: 'Join this room' }).click();
+    await heldAnswer;
+
+    await sender.locator('.relay-choice > summary').click();
+    const consent = sender.waitForResponse((response) => response.url().endsWith(`/api/rooms/${encodeURIComponent(code)}`)
+      && response.request().method() === 'POST' && !!response.request().postData()?.includes('relay-consent'));
+    await Promise.all([consent, sender.getByRole('button', { name: 'Use the private relay' }).click()]);
+    await expect(sender.locator('#real-state')).toHaveText('Relay chosen. Waiting for the other person to choose it too.');
+
+    releaseAnswer();
+    await sender.waitForTimeout(250);
+    await expect(sender.locator('#real-state')).toHaveText('Relay chosen. Waiting for the other person to choose it too.');
+  } finally {
+    releaseAnswer();
+    await Promise.all([senderContext.close(), receiverContext.close()]);
+  }
+});
 
 test('sample transfer produces a three-file receipt @claim:demo-receipt', async ({ page }) => {
   await page.goto('/demo');
