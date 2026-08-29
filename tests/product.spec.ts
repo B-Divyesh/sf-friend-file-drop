@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-import type { Page, Route } from '@playwright/test';
+import type { Browser, Page, Route } from '@playwright/test';
 
 type MockRoom = {
   offer?: unknown;
@@ -63,6 +63,63 @@ async function receiptCount(page: Page): Promise<number> {
     db.close();
     return records.length;
   });
+}
+
+type RelayPair = {
+  senderContext: Awaited<ReturnType<Browser['newContext']>>;
+  receiverContext: Awaited<ReturnType<Browser['newContext']>>;
+  sender: Page;
+  receiver: Page;
+  rooms: Map<string, MockRoom>;
+  code: string;
+};
+
+async function openIsolatedRelayPair(browser: Browser, fileName: string): Promise<RelayPair> {
+  // Each invocation owns its browser storage, route handler, room map, and
+  // generated room code. That makes this safe when Playwright schedules relay
+  // coverage beside unrelated WebRTC tests on its second worker.
+  const senderContext = await browser.newContext();
+  const receiverContext = await browser.newContext();
+  const sender = await senderContext.newPage();
+  const receiver = await receiverContext.newPage();
+  const rooms = new Map<string, MockRoom>();
+  await Promise.all([installRoomApi(sender, rooms), installRoomApi(receiver, rooms)]);
+  await Promise.all([sender.goto('/'), receiver.goto('/')]);
+  await sender.locator('#file-input').setInputFiles({ name: fileName, mimeType: 'text/plain', buffer: Buffer.from(`isolated relay payload for ${fileName}`) });
+  await sender.getByRole('button', { name: 'Make a six-word room' }).click();
+  const code = await sender.locator('.room-label strong').innerText();
+  await expect.poll(() => rooms.get(code)?.offer).toBeTruthy();
+
+  await receiver.getByRole('tab', { name: 'Receive files' }).click();
+  await receiver.locator('#room-code').fill(code);
+  await receiver.getByRole('button', { name: 'Join this room' }).click();
+  await expect.poll(() => rooms.get(code)?.answer).toBeTruthy();
+  return { senderContext, receiverContext, sender, receiver, rooms, code };
+}
+
+async function chooseRelay(pair: RelayPair): Promise<void> {
+  const { sender, receiver, rooms, code } = pair;
+  await sender.locator('.relay-choice > summary').click();
+  await receiver.locator('.relay-choice > summary').click();
+  await expect(sender.getByRole('button', { name: 'Use the private relay' })).toBeEnabled();
+  await expect(receiver.getByRole('button', { name: 'Use the private relay' })).toBeEnabled();
+
+  const senderConsent = sender.waitForResponse((response) => response.url().endsWith(`/api/rooms/${encodeURIComponent(code)}`)
+    && response.request().method() === 'POST' && !!response.request().postData()?.includes('relay-consent'));
+  await Promise.all([senderConsent, sender.getByRole('button', { name: 'Use the private relay' }).click()]);
+  await expect.poll(() => rooms.get(code)?.relay).toEqual({ sender: true, receiver: false });
+  await expect(sender.locator('#real-state')).toContainText('Waiting for the other person');
+
+  const receiverConsent = receiver.waitForResponse((response) => response.url().endsWith(`/api/rooms/${encodeURIComponent(code)}`)
+    && response.request().method() === 'POST' && !!response.request().postData()?.includes('relay-consent'));
+  await Promise.all([receiverConsent, receiver.getByRole('button', { name: 'Use the private relay' }).click()]);
+  await expect.poll(() => rooms.get(code)?.relay).toEqual({ sender: true, receiver: true });
+  await expect(sender.getByText('Relay ready.')).toBeVisible({ timeout: 5_000 });
+  await expect(sender.getByRole('button', { name: 'Send 1 file' })).toBeEnabled();
+}
+
+async function closeRelayPair(pair: RelayPair): Promise<void> {
+  await Promise.all([pair.senderContext.close(), pair.receiverContext.close()]);
 }
 
 test('sample transfer produces a three-file receipt @claim:demo-receipt', async ({ page }) => {
@@ -215,30 +272,39 @@ test('saved direct chunks resume at the verified offset @claim:resumable-transfe
 });
 
 test('relay needs both choices and removes bytes after receipt @claim:opt-in-relay', async ({ browser }) => {
-  const senderContext = await browser.newContext();
-  const receiverContext = await browser.newContext();
-  const sender = await senderContext.newPage();
-  const receiver = await receiverContext.newPage();
-  const rooms = new Map<string, MockRoom>();
-  await Promise.all([installRoomApi(sender, rooms), installRoomApi(receiver, rooms)]);
-  await Promise.all([sender.goto('/'), receiver.goto('/')]);
-  await sender.locator('#file-input').setInputFiles({ name: 'relay.txt', mimeType: 'text/plain', buffer: Buffer.from('relay with explicit consent') });
-  await sender.getByRole('button', { name: 'Make a six-word room' }).click();
-  const code = (await sender.locator('.room-label strong').textContent())!;
-  await receiver.getByRole('tab', { name: 'Receive files' }).click();
-  await receiver.locator('#room-code').fill(code);
-  await receiver.getByRole('button', { name: 'Join this room' }).click();
-  await sender.locator('.relay-choice').getByText('Direct path not working?').click();
-  await receiver.locator('.relay-choice').getByText('Direct path not working?').click();
-  await sender.getByRole('button', { name: 'Use the private relay' }).click();
-  await expect(sender.getByText('Waiting for the other person')).toBeVisible();
-  await receiver.getByRole('button', { name: 'Use the private relay' }).click();
-  await expect(sender.getByText('Relay ready.')).toBeVisible({ timeout: 5_000 });
-  await sender.getByRole('button', { name: 'Send 1 file' }).click();
-  await expect(receiver.getByRole('heading', { name: 'Transfer finished' })).toBeVisible({ timeout: 10_000 });
-  await expect.poll(() => rooms.get(code)?.files.size).toBe(0);
-  await receiverContext.close();
-  await senderContext.close();
+  const pair = await openIsolatedRelayPair(browser, 'relay.txt');
+  try {
+    await chooseRelay(pair);
+    await pair.sender.getByRole('button', { name: 'Send 1 file' }).click();
+    await expect.poll(() => pair.rooms.get(pair.code)?.manifest?.length).toBe(1);
+    await expect(pair.receiver.getByRole('heading', { name: 'Transfer finished' })).toBeVisible({ timeout: 10_000 });
+    await expect.poll(() => pair.rooms.get(pair.code)?.files.size).toBe(0);
+  } finally {
+    await closeRelayPair(pair);
+  }
+});
+
+test('isolated relay rooms do not cross consent or bytes when run together @regression:parallel-relay-isolation', async ({ browser }) => {
+  const [first, second] = await Promise.all([
+    openIsolatedRelayPair(browser, 'first-isolated-relay.txt'),
+    openIsolatedRelayPair(browser, 'second-isolated-relay.txt')
+  ]);
+  try {
+    expect(first.code).not.toBe(second.code);
+    await Promise.all([chooseRelay(first), chooseRelay(second)]);
+    await Promise.all([
+      first.sender.getByRole('button', { name: 'Send 1 file' }).click(),
+      second.sender.getByRole('button', { name: 'Send 1 file' }).click()
+    ]);
+    await Promise.all([
+      expect(first.receiver.getByRole('heading', { name: 'Transfer finished' })).toBeVisible({ timeout: 10_000 }),
+      expect(second.receiver.getByRole('heading', { name: 'Transfer finished' })).toBeVisible({ timeout: 10_000 })
+    ]);
+    await expect.poll(() => first.rooms.get(first.code)?.files.size).toBe(0);
+    await expect.poll(() => second.rooms.get(second.code)?.files.size).toBe(0);
+  } finally {
+    await Promise.all([closeRelayPair(first), closeRelayPair(second)]);
+  }
 });
 
 test('same-content files keep separate verified rows and receipts @claim:individual-file-receipts @claim:own-files-untouched', async ({ browser }) => {
