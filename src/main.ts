@@ -57,7 +57,7 @@ function footer(): string {
   return `<footer class="site-footer">
     <p>Send private files and keep a finished receipt.</p>
     <nav aria-label="Footer navigation"><a href="/privacy" data-link>Privacy</a><a href="/terms" data-link>Terms</a></nav>
-    <p>Built by Param Factory · v1.1.2 · <span title="Generated with the factory image model">Original generated art</span></p>
+    <p>Built by Param Factory · v1.1.3 · <span title="Generated with the factory image model">Original generated art</span></p>
   </footer>`;
 }
 

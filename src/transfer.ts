@@ -1,5 +1,5 @@
 import { clearPartialChunks, getPartialChunks, savePartialChunk, type SavedReceipt } from './db';
-import { RoomService } from './signaling';
+import { RoomService, RoomServiceError, type RoomStatus } from './signaling';
 
 export type FileManifest = { id: string; name: string; type: string; size: number; hash: string };
 export type TransferHooks = {
@@ -88,6 +88,16 @@ export class DirectTransfer {
     return this.setState({ path: 'relay', phase, role }, message, tone);
   }
 
+  private async pollRoomStatus(): Promise<RoomStatus | undefined> {
+    try {
+      return await this.room.status();
+    } catch (error) {
+      if (!(error instanceof RoomServiceError) || !error.retryable) throw error;
+      await delay(error.retryAfterMs);
+      return undefined;
+    }
+  }
+
   private attachChannel(channel: RTCDataChannel): void {
     this.channel = channel;
     channel.binaryType = 'arraybuffer';
@@ -148,10 +158,12 @@ export class DirectTransfer {
     }
     this.setRelayState('waiting', role, 'Relay chosen. Waiting for the other person to choose it too.');
     for (let attempt = 0; attempt < 180; attempt += 1) {
-      const status = await this.room.status();
-      if (status.relay.ready) {
+      const status = await this.pollRoomStatus();
+      if (status?.relay.ready) {
         this.setRelayState('ready', role, 'Relay ready. It will hold this transfer for up to 15 minutes.', 'success');
-        if (role === 'receiver') void this.receiveRelay();
+        if (role === 'receiver') void this.receiveRelay().catch((error) => {
+          this.setRelayState('error', 'receiver', error instanceof Error ? error.message : 'The relay stopped. Rejoin the room and try again.', 'error');
+        });
         return;
       }
       await delay(1000);
@@ -162,7 +174,8 @@ export class DirectTransfer {
   private async receiveRelay(): Promise<void> {
     this.setRelayState('transferring', 'receiver');
     for (let attempt = 0; attempt < 180; attempt += 1) {
-      const status = await this.room.status();
+      const status = await this.pollRoomStatus();
+      if (!status) continue;
       if (!status.manifest) { await delay(1000); continue; }
       this.hooks.onManifest(status.manifest);
       const receivedFiles: SavedReceipt['files'] = [];
@@ -184,6 +197,7 @@ export class DirectTransfer {
       this.setRelayState('complete', 'receiver');
       return;
     }
+    throw new Error('The relay transfer did not arrive before the room expired. Ask the sender to make a new room.');
   }
 
   get isReady(): boolean {
@@ -205,8 +219,8 @@ export class DirectTransfer {
       }
       this.setRelayState('transferring', 'sender', 'Files uploaded. Waiting for the receiver to verify them.');
       for (let attempt = 0; attempt < 180; attempt += 1) {
-        const status = await this.room.status();
-        if (status.receipt) {
+        const status = await this.pollRoomStatus();
+        if (status?.receipt) {
           this.hooks.onReceipt({ ...status.receipt, direction: 'sent' });
           this.setRelayState('complete', 'sender', 'The receiver verified every file.', 'success');
           return;

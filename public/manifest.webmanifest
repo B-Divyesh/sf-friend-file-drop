@@ -2,7 +2,7 @@
   "name": "Friend File Drop",
   "short_name": "File Drop",
   "description": "Send files browser to browser and keep a finished receipt.",
-  "start_url": "/?source=installed&v=1",
+  "start_url": "/?source=installed&v=2",
   "scope": "/",
   "display": "standalone",
   "background_color": "#F4EEDC",

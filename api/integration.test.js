@@ -85,13 +85,26 @@ test('room and relay endpoints rate limit a server-derived identity and always s
   assert.equal(response.headers['retry-after'], '60');
 });
 
+test('one room cannot exhaust another room\'s relay budget @regression:relay-room-rate-isolation', async () => {
+  store.rates.clear();
+  store.rooms.clear();
+  const socket = { remoteAddress: '203.0.113.8' };
+  const otherCode = 'iris-juniper-kite-lake-lemon-maple';
+  for (let index = 0; index <= store.MAX_REQUESTS_PER_MINUTE; index += 1) {
+    const response = await call(roomsHandler, { code }, { method: 'GET', socket });
+    assert.equal(response.status, index === store.MAX_REQUESTS_PER_MINUTE ? 429 : 404);
+  }
+  const independent = await call(roomsHandler, { code: otherCode }, { method: 'GET', socket });
+  assert.equal(independent.status, 404);
+});
+
 test('health endpoint identifies the deployed API build @claim:api-health', async () => {
   const context = {};
   await healthHandler(context);
   assert.equal(context.res.status, 200);
   assert.equal(context.res.headers['cache-control'], 'no-store');
   assert.equal(context.res.body.service, 'friend-file-drop-api');
-  assert.match(context.res.body.version, /^1\.1\.2$/);
+  assert.match(context.res.body.version, /^1\.1\.3$/);
   assert.ok(Object.hasOwn(context.res.body, 'sourceRevision'));
   assert.ok(Object.hasOwn(context.res.body, 'deploymentId'));
 });

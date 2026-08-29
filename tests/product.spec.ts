@@ -14,6 +14,7 @@ type MockRoom = {
 
 type RoomApiOptions = {
   beforeStatus?: (room: MockRoom) => Promise<void>;
+  statusResponse?: (room: MockRoom) => { status: number; body: unknown; headers?: Record<string, string> } | undefined;
 };
 
 function installRoomApi(page: Page, rooms: Map<string, MockRoom>, options: RoomApiOptions = {}): Promise<void> {
@@ -50,6 +51,13 @@ function installRoomApi(page: Page, rooms: Map<string, MockRoom>, options: RoomA
     }
     if (!room) return json(404, { error: 'That room expired or does not exist.' });
     await options.beforeStatus?.(room);
+    const response = options.statusResponse?.(room);
+    if (response) return route.fulfill({
+      status: response.status,
+      contentType: 'application/json',
+      headers: response.headers,
+      body: JSON.stringify(response.body)
+    });
     return json(200, { ...room, files: undefined, relay: { ...room.relay, ready: room.relay.sender && room.relay.receiver } });
   });
 }
@@ -385,6 +393,49 @@ test('isolated relay rooms do not cross consent or bytes when run together @regr
     await expect.poll(() => second.rooms.get(second.code)?.files.size).toBe(0);
   } finally {
     await Promise.all([closeRelayPair(first), closeRelayPair(second)]);
+  }
+});
+
+test('receiver retries a throttled status after upload and finishes @regression:relay-post-upload-timeout', async ({ browser }) => {
+  const senderContext = await browser.newContext();
+  const receiverContext = await browser.newContext();
+  const sender = await senderContext.newPage();
+  const receiver = await receiverContext.newPage();
+  const rooms = new Map<string, MockRoom>();
+  let injectedThrottle = false;
+  await installRoomApi(sender, rooms);
+  await installRoomApi(receiver, rooms, {
+    statusResponse: (room) => {
+      if (!room.manifest || room.receipt) return undefined;
+      if (room.files.size === 0) return {
+        status: 200,
+        body: { ...room, manifest: undefined, files: undefined, relay: { ...room.relay, ready: room.relay.sender && room.relay.receiver } }
+      };
+      if (injectedThrottle) return undefined;
+      injectedThrottle = true;
+      return { status: 429, headers: { 'retry-after': '0' }, body: { error: 'Too many room requests. Wait one minute and try again.' } };
+    }
+  });
+
+  try {
+    await Promise.all([sender.goto('/'), receiver.goto('/')]);
+    await sender.locator('#file-input').setInputFiles({ name: 'post-upload.txt', mimeType: 'text/plain', buffer: Buffer.from('receiver must resume polling') });
+    await sender.getByRole('button', { name: 'Make a six-word room' }).click();
+    const code = (await sender.locator('.room-label strong').textContent())!;
+    await receiver.getByRole('tab', { name: 'Receive files' }).click();
+    await receiver.locator('#room-code').fill(code);
+    await receiver.getByRole('button', { name: 'Join this room' }).click();
+    await sender.locator('.relay-choice > summary').click();
+    await receiver.locator('.relay-choice > summary').click();
+    await sender.getByRole('button', { name: 'Use the private relay' }).click();
+    await receiver.getByRole('button', { name: 'Use the private relay' }).click();
+    await expect(sender.getByText('Relay ready.')).toBeVisible({ timeout: 5_000 });
+    await sender.getByRole('button', { name: 'Send 1 file' }).click();
+    await expect(receiver.getByRole('heading', { name: 'Transfer finished' })).toBeVisible({ timeout: 10_000 });
+    await expect(sender.getByRole('heading', { name: 'Transfer finished' })).toBeVisible({ timeout: 10_000 });
+    expect(injectedThrottle).toBeTruthy();
+  } finally {
+    await Promise.all([senderContext.close(), receiverContext.close()]);
   }
 });
 

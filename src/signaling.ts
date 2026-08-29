@@ -9,10 +9,29 @@ export type RoomStatus = {
   receipt?: SavedReceipt;
 };
 
+export class RoomServiceError extends Error {
+  constructor(message: string, readonly status: number, readonly retryAfterMs: number) {
+    super(message);
+    this.name = 'RoomServiceError';
+  }
+
+  get retryable(): boolean {
+    return this.status === 429 || this.status === 503;
+  }
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, init);
   const payload = await response.json().catch(() => ({})) as { error?: string } & T;
-  if (!response.ok) throw new Error(payload.error || `The room service returned ${response.status}.`);
+  if (!response.ok) {
+    const retryHeader = response.headers.get('retry-after');
+    const retryAfter = retryHeader === null ? Number.NaN : Number(retryHeader);
+    throw new RoomServiceError(
+      payload.error || `The room service returned ${response.status}.`,
+      response.status,
+      Number.isFinite(retryAfter) && retryAfter >= 0 ? retryAfter * 1000 : 1000
+    );
+  }
   return payload;
 }
 
@@ -36,7 +55,10 @@ export class RoomService {
   }
 
   async uploadFile(fileId: string, file: Blob, onProgress: (sent: number) => void): Promise<void> {
-    const chunkSize = 256 * 1024;
+    // Fifty requests are enough for the full 25 MB relay allowance. Keeping a
+    // complete transfer below the room's request budget prevents the upload
+    // itself from exhausting the receiver's polling allowance.
+    const chunkSize = 512 * 1024;
     let offset = 0;
     while (offset < file.size) {
       const chunk = file.slice(offset, offset + chunkSize);

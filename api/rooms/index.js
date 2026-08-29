@@ -9,10 +9,15 @@ function json(status, body, extra = {}) {
 
 module.exports = async function rooms(context, req) {
   const code = String(context.bindingData.code || '').toLowerCase();
+  const validCode = ROOM_PATTERN.test(code);
+  const identity = clientIdentity(req);
+  const rateScope = validCode
+    ? (req.method === 'POST' && req.body?.action === 'create' ? `${identity}:create` : `${identity}:room:${code}`)
+    : `${identity}:invalid-room`;
   try {
-    if (await persistent.rateLimit(clientIdentity(req))) { context.res = json(429, { error: 'Too many room requests. Wait one minute and try again.' }, { 'retry-after': '60' }); return; }
+    if (await persistent.rateLimit(rateScope)) { context.res = json(429, { error: 'Too many room requests. Wait one minute and try again.' }, { 'retry-after': '60' }); return; }
   } catch (error) { context.res = json(error.statusCode || 503, { error: error.message }); return; }
-  if (!ROOM_PATTERN.test(code)) { context.res = json(400, { error: 'Use a valid six-word room code.' }); return; }
+  if (!validCode) { context.res = json(400, { error: 'Use a valid six-word room code.' }); return; }
   if (req.method === 'GET') try {
     const room = await persistent.getRoom(code);
     context.res = room ? json(200, publicRoom(room)) : json(404, { error: 'That room expired or does not exist.' });
