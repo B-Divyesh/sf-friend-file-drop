@@ -6,5 +6,5 @@
 - Result: all three progress lines finish and a downloadable sample receipt appears.
 - Reset: choose **Reset demo** in the persistent yellow banner.
 - Exit: choose **Start a real transfer** to discard every `demo:` key before opening the real transfer.
-- Isolation: demo state uses only `sessionStorage` keys prefixed with `demo:`. It does not read or write the production IndexedDB receipt store.
+- Isolation: temporary demo data stays only in the current tab under `demo:` names. It does not read or write real receipts.
 - Network: the demo is a deterministic local simulation. It makes no API request and uses no real file. Real rooms use the same-origin `/api/rooms/*` service.

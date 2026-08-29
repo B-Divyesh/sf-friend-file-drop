@@ -15,7 +15,7 @@ test('deployed API health identifies this exact candidate @regression:live-build
   const body = await response.json() as Record<string, unknown>;
   expect(body).toMatchObject({
     service: 'friend-file-drop-api',
-    version: '1.1.3',
+    version: '1.1.4',
     sourceRevision: candidateRevision,
     status: 'ready'
   });
@@ -42,14 +42,26 @@ for (const route of ['/', '/demo', '/privacy', '/terms', '/missing-page']) {
   });
 }
 
-test('deployed one-click demo stays same-origin and exit discards its state @regression:live-demo-exit-clears', async ({ page }) => {
+test('deployed one-click demo is ready, stays same-origin, and discards its state @regression:live-demo-exit-clears', async ({ page }) => {
   const foreignRequests: string[] = [];
+  const apiRequests: string[] = [];
   page.on('request', (request) => {
     if (new URL(request.url()).origin !== new URL(liveUrl!).origin) foreignRequests.push(request.url());
+    if (new URL(request.url()).pathname.startsWith('/api/')) apiRequests.push(request.url());
   });
   await page.goto(liveUrl!);
   await page.getByRole('link', { name: 'Try it with sample data' }).click();
   await expect(page).toHaveURL(`${liveUrl}/?demo=1`);
+  await expect(page.getByText('Demo — sample data, nothing is saved')).toBeVisible();
+  const rows = page.locator('#demo-files .file-row');
+  await expect(rows).toHaveCount(3);
+  await expect(rows).toContainText(['picnic-table.jpg', 'family-recipes.pdf', 'read-me-first.txt']);
+  await expect(rows.locator('.file-hash')).toHaveText([
+    '7d6937b9d57b343a82c930f195567f9eb64e16ef52fe32d926e5130fb37376c1',
+    '62fdfe29e7c9fba645a4a943c8e6d7fca73f43c1f228288d0c844991afa88497',
+    'b47b67ef28ed857e3aee9f8c43c129e95d1a956f53cb696637d290f0dc554ee2'
+  ]);
+  await expect(page.locator('input[type="file"]')).toHaveCount(0);
   await page.getByRole('button', { name: 'Send sample files' }).click();
   await expect(page.getByRole('heading', { name: 'Transfer finished' })).toBeVisible();
   expect(await page.evaluate(() => Object.keys(sessionStorage).filter((key) => key.startsWith('demo:')))).toEqual(['demo:completed']);
@@ -59,6 +71,7 @@ test('deployed one-click demo stays same-origin and exit discards its state @reg
   await expect(page.getByRole('button', { name: 'Send sample files' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Transfer finished' })).toHaveCount(0);
   expect(foreignRequests).toEqual([]);
+  expect(apiRequests).toEqual([]);
 });
 
 test('deployed demo reloads offline after service-worker control', async ({ page, context }) => {

@@ -1,4 +1,4 @@
-const VERSION = 'friend-file-drop-v4';
+const VERSION = 'friend-file-drop-v5';
 const CORE = ['/', '/demo', '/privacy', '/terms', '/offline.html', '/manifest.webmanifest', '/favicon.svg', '/assets/notebook-transfer.webp', '/icons/icon-192.png', '/icons/icon-512.png'];
 
 self.addEventListener('install', (event) => {

@@ -4,13 +4,13 @@ Send private files between mixed devices and get a clear receipt.
 
 Friend File Drop is a free, account-free browser tool for friends and families. It sends files directly between two browsers. Both people see the file list, a matching file hash, and the finish time.
 
-The sender shares one six-word room code. The code connects the browsers for 15 minutes. If the direct path fails, both people can choose a temporary 25 MB relay. Verified pieces stay in this browser so a rejoined transfer can continue.
+The sender shares one six-word room code. The code connects the browsers for 15 minutes. If the direct path fails, both people can choose a temporary 25 MB relay. Saved parts of an interrupted transfer stay in this browser so it can continue when you rejoin.
 
 ## Try the sandbox
 
 Open `/?demo=1` or `http://localhost:5173/?demo=1`. The page starts with three sample files ready. Choose **Send sample files** to see their receipt.
 
-Demo state uses only session-storage keys starting with `demo:`. It never reads real receipts.
+The demo keeps temporary data only in this tab, under names starting with `demo:`. It never reads real receipts.
 
 ## Run locally
 
@@ -37,7 +37,7 @@ npm run build
 
 The app has no analytics, advertising, third-party runtime scripts, or contact access. Files normally travel directly between the two browsers. Both people must choose the relay before it accepts file bytes.
 
-Finished receipts and verified pieces stay in this browser's database. The most recent room code and its file names, sizes, hashes, and transfer IDs also stay in this browser. This lets a sender reselect the same files after a reload and reopen the room at the saved offset. Another room replaces this data. You can also clear it from the transfer sheet or by clearing site data.
+Finished receipts and saved transfer parts stay only in this browser. The most recent room code and its file names, sizes, hashes, and transfer IDs also stay in this browser. This lets a sender choose the same files after a reload and continue from where the transfer stopped. Another room replaces this data. You can also clear it from the transfer sheet or by clearing site data.
 
 The installed app opens offline after the first visit. Sending files requires a network and another browser.
 

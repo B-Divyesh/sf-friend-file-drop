@@ -83,10 +83,10 @@ Audited 2026-08-29 against the `plain-words` rules. Hyphenated terms and numbers
 | The sender shares one six-word room code. | 7 |
 | The code connects the browsers for 15 minutes. | 8 |
 | If the direct path fails, both people can choose a temporary 25 MB relay. | 14 |
-| Verified pieces stay in this browser so a rejoined transfer can continue. | 12 |
+| Saved parts of an interrupted transfer stay in this browser so it can continue when you rejoin. | 17 |
 | The page starts with three sample files ready. | 8 |
 | Choose Send sample files to see their receipt. | 8 |
-| Demo state uses only session-storage keys starting with demo. | 9 |
+| The demo keeps temporary data only in this tab, under names starting with demo. | 14 |
 | It never reads real receipts. | 5 |
 | Requires Node.js 20 or newer. | 5 |
 | For a real transfer, start the API in api. | 9 |
@@ -94,9 +94,9 @@ Audited 2026-08-29 against the `plain-words` rules. Hyphenated terms and numbers
 | The app has no analytics, advertising, third-party runtime scripts, or contact access. | 12 |
 | Files normally travel directly between the two browsers. | 8 |
 | Both people must choose the relay before it accepts file bytes. | 11 |
-| Finished receipts and verified pieces stay in this browser's database. | 10 |
+| Finished receipts and saved transfer parts stay only in this browser. | 11 |
 | The most recent room code and its file names, sizes, hashes, and transfer IDs also stay in this browser. | 19 |
-| This lets a sender reselect the same files after a reload and reopen the room at the saved offset. | 18 |
+| This lets a sender choose the same files after a reload and continue from where the transfer stopped. | 18 |
 | Another room replaces this data. | 5 |
 | You can also clear it from the transfer sheet or by clearing site data. | 14 |
 | The installed app opens offline after the first visit. | 9 |

@@ -217,12 +217,29 @@ test('the free version has no payment action @claim:free-use', async ({ page }) 
   await expect(page.getByRole('link', { name: /buy|pay|subscribe/i })).toHaveCount(0);
 });
 
-test('the first-screen sample action enters the isolated query route in one click', async ({ page }) => {
+test('one click opens the isolated demo with three ready sample files @claim:demo-ready-in-one-click', async ({ page }) => {
+  const apiRequests: string[] = [];
+  page.on('request', (request) => {
+    if (new URL(request.url()).pathname.startsWith('/api/')) apiRequests.push(request.url());
+  });
   await page.goto('/');
   await page.getByRole('link', { name: 'Try it with sample data' }).click();
   await expect(page).toHaveURL('/?demo=1');
   await expect(page.getByText('Demo — sample data, nothing is saved')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Reset demo' })).toBeVisible();
+  const rows = page.locator('#demo-files .file-row');
+  await expect(rows).toHaveCount(3);
+  await expect(rows.nth(0)).toContainText('picnic-table.jpg');
+  await expect(rows.nth(0)).toContainText('2.3 MB · SHA-256');
+  await expect(rows.nth(0).locator('.file-hash')).toHaveText('7d6937b9d57b343a82c930f195567f9eb64e16ef52fe32d926e5130fb37376c1');
+  await expect(rows.nth(1)).toContainText('family-recipes.pdf');
+  await expect(rows.nth(1)).toContainText('840.0 KB · SHA-256');
+  await expect(rows.nth(1).locator('.file-hash')).toHaveText('62fdfe29e7c9fba645a4a943c8e6d7fca73f43c1f228288d0c844991afa88497');
+  await expect(rows.nth(2)).toContainText('read-me-first.txt');
+  await expect(rows.nth(2)).toContainText('1.2 KB · SHA-256');
+  await expect(rows.nth(2).locator('.file-hash')).toHaveText('b47b67ef28ed857e3aee9f8c43c129e95d1a956f53cb696637d290f0dc554ee2');
+  await expect(page.locator('input[type="file"]')).toHaveCount(0);
+  expect(apiRequests).toEqual([]);
 });
 
 test('demo stays isolated and leaving clears its session @claim:demo-isolation @claim:demo-no-real-files @regression:demo-exit-clears', async ({ page }) => {
@@ -587,7 +604,7 @@ test('the saved room code is visible, documented, and removable @claim:room-code
   await expect.poll(() => page.evaluate(() => localStorage.getItem('friend-file-drop:last-room'))).toBeNull();
   await expect.poll(() => page.evaluate(() => localStorage.getItem('friend-file-drop:last-transfer'))).toBeNull();
   await page.goto('/privacy');
-  await expect(page.getByText('The most recent room code and its file names, sizes, hashes, and transfer IDs stay in this browser\'s local storage.')).toBeVisible();
+  await expect(page.getByText('The most recent room code and its file names, sizes, hashes, and transfer IDs also stay in this browser.')).toBeVisible();
 });
 
 test('privacy boundaries match storage and loaded resources @claim:privacy-boundaries', async ({ page }) => {

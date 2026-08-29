@@ -1,5 +1,12 @@
 [
   {
+    "id": "demo-ready-in-one-click",
+    "claim": "One click opens a ready demo with three sample files, sizes, and hashes.",
+    "where": "landing action note, demo documentation, and README",
+    "test": "npm test -- --grep @claim:demo-ready-in-one-click",
+    "sandbox": "fresh browser context at /; click the primary sample action once; assert /?demo=1, banner, three exact sample rows, no file input, and no API request"
+  },
+  {
     "id": "demo-receipt",
     "claim": "The sample transfer finishes with three matching file hashes and a receipt.",
     "where": "demo manifest and receipt",
@@ -64,14 +71,14 @@
   },
   {
     "id": "resumable-transfer",
-    "claim": "A rejoined direct transfer resumes from chunks saved in IndexedDB.",
+    "claim": "A rejoined direct transfer continues from where it stopped.",
     "where": "transfer status, privacy page, and README",
     "test": "npm test -- --grep @claim:resumable-transfer",
     "sandbox": "two fresh browser contexts; establish a direct transfer, persist real received chunks, reload and visibly rejoin the receiver, reload and reopen the sender with the same file, and assert the saved offset is used"
   },
   {
     "id": "local-receipts",
-    "claim": "Finished receipts are stored in this browser's IndexedDB.",
+    "claim": "Finished receipts stay only in this browser.",
     "where": "privacy page and README",
     "test": "npm test -- --grep @claim:local-receipts",
     "sandbox": "fresh sender context; finish a direct transfer and read the receipt object store"

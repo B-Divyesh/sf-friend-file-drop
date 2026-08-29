@@ -29,3 +29,30 @@ test('release deploy wires the clean full candidate SHA into API settings and ve
   assert.match(script, /FRIEND_FILE_DROP_SOURCE_REVISION=\$\{candidate_revision\}/);
   assert.match(script, /verify-live-identity\.mjs" "\$\{live_url\}" "\$\{candidate_revision\}"/);
 });
+
+test('every declared claim has one tagged test and the catalog line meets its copy contract', async () => {
+  const claims = JSON.parse(await readFile(new URL('../.factory/claims.json', import.meta.url), 'utf8'));
+  const testSources = await Promise.all([
+    '../tests/product.spec.ts',
+    '../api/lib/store.test.js',
+    '../api/integration.test.js'
+  ].map((path) => readFile(new URL(path, import.meta.url), 'utf8')));
+  const allTests = testSources.join('\n');
+  assert.equal(new Set(claims.map(({ id }) => id)).size, claims.length);
+  for (const claim of claims) {
+    assert.equal(allTests.split(`@claim:${claim.id}`).length - 1, 1, `${claim.id} must tag exactly one test`);
+    assert.match(claim.test, new RegExp(`@claim:${claim.id}(?:\\s|$)`));
+  }
+
+  const catalog = (await readFile(new URL('../.factory/catalog-description.txt', import.meta.url), 'utf8')).trim();
+  assert.ok(catalog.length <= 120);
+  assert.match(catalog, /^(Send|Receive|Share|Transfer|Keep)\b/);
+});
+
+test('reader copy does not regress to the rejected review wording', async () => {
+  const readme = await readFile(new URL('../README.md', import.meta.url), 'utf8');
+  const product = await readFile(new URL('../src/main.ts', import.meta.url), 'utf8');
+  for (const rejected of ['saved offset', 'verified pieces', 'session-storage', 'Each file crosses once', 'same record', 'How the files cross', 'Margin note', 'Start for real']) {
+    assert.doesNotMatch(`${readme}\n${product}`, new RegExp(rejected, 'i'));
+  }
+});

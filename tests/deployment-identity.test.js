@@ -7,7 +7,7 @@ const staleRevision = 'dec081988bd5618f24e555fe9174aa63c8e59fce';
 
 const healthResponse = (sourceRevision = candidate, overrides = {}) => new Response(JSON.stringify({
   service: 'friend-file-drop-api',
-  version: '1.1.3',
+  version: '1.1.4',
   sourceRevision,
   deploymentId: 'deployment-under-test',
   status: 'ready',
