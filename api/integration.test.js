@@ -115,13 +115,60 @@ test('one room cannot exhaust another room\'s relay budget @regression:relay-roo
   assert.equal(independent.status, 404);
 });
 
-test('health endpoint identifies the deployed API build @claim:api-health', async () => {
-  const context = {};
-  await healthHandler(context);
-  assert.equal(context.res.status, 200);
-  assert.equal(context.res.headers['cache-control'], 'no-store');
-  assert.equal(context.res.body.service, 'friend-file-drop-api');
-  assert.match(context.res.body.version, /^1\.1\.3$/);
-  assert.ok(Object.hasOwn(context.res.body, 'sourceRevision'));
-  assert.ok(Object.hasOwn(context.res.body, 'deploymentId'));
+test('health endpoint identifies the exact deployed API build @claim:api-health', async () => {
+  const previous = {
+    source: process.env.FRIEND_FILE_DROP_SOURCE_REVISION,
+    github: process.env.GITHUB_SHA,
+    build: process.env.BUILD_SOURCEVERSION,
+    deployment: process.env.WEBSITE_DEPLOYMENT_ID,
+    instance: process.env.WEBSITE_INSTANCE_ID
+  };
+  const sourceRevision = '0123456789abcdef0123456789abcdef01234567';
+  try {
+    process.env.FRIEND_FILE_DROP_SOURCE_REVISION = sourceRevision;
+    process.env.GITHUB_SHA = 'ffffffffffffffffffffffffffffffffffffffff';
+    process.env.BUILD_SOURCEVERSION = 'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
+    process.env.WEBSITE_DEPLOYMENT_ID = 'deployment-under-test';
+    delete process.env.WEBSITE_INSTANCE_ID;
+    const context = {};
+    await healthHandler(context);
+    assert.equal(context.res.status, 200);
+    assert.equal(context.res.headers['cache-control'], 'no-store');
+    assert.equal(context.res.body.service, 'friend-file-drop-api');
+    assert.match(context.res.body.version, /^1\.1\.3$/);
+    assert.equal(context.res.body.sourceRevision, sourceRevision);
+    assert.equal(context.res.body.deploymentId, 'deployment-under-test');
+    assert.equal(context.res.body.status, 'ready');
+  } finally {
+    for (const [key, value] of Object.entries({
+      FRIEND_FILE_DROP_SOURCE_REVISION: previous.source,
+      GITHUB_SHA: previous.github,
+      BUILD_SOURCEVERSION: previous.build,
+      WEBSITE_DEPLOYMENT_ID: previous.deployment,
+      WEBSITE_INSTANCE_ID: previous.instance
+    })) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
+  }
+});
+
+test('health endpoint refuses to report ready without complete build identity @regression:health-build-identity', async () => {
+  const keys = ['FRIEND_FILE_DROP_SOURCE_REVISION', 'GITHUB_SHA', 'BUILD_SOURCEVERSION', 'WEBSITE_DEPLOYMENT_ID', 'WEBSITE_INSTANCE_ID'];
+  const previous = Object.fromEntries(keys.map((key) => [key, process.env[key]]));
+  try {
+    keys.forEach((key) => delete process.env[key]);
+    const context = {};
+    await healthHandler(context);
+    assert.equal(context.res.status, 503);
+    assert.equal(context.res.headers['cache-control'], 'no-store');
+    assert.equal(context.res.body.sourceRevision, null);
+    assert.equal(context.res.body.deploymentId, null);
+    assert.equal(context.res.body.status, 'build-identity-missing');
+  } finally {
+    for (const [key, value] of Object.entries(previous)) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
+  }
 });

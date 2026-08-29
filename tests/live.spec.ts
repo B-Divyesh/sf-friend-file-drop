@@ -1,8 +1,26 @@
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { execFileSync } from 'node:child_process';
 
 const liveUrl = process.env.LIVE_URL;
+const candidateRevision = liveUrl
+  ? process.env.EXPECTED_SOURCE_REVISION || execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim()
+  : '';
 test.skip(!liveUrl, 'Set LIVE_URL to run deployed identity checks.');
+
+test('deployed API health identifies this exact candidate @regression:live-build-identity', async ({ request }) => {
+  const response = await request.get(`${liveUrl}/api/health`);
+  expect(response.status()).toBe(200);
+  expect(response.headers()['cache-control']).toBe('no-store');
+  const body = await response.json() as Record<string, unknown>;
+  expect(body).toMatchObject({
+    service: 'friend-file-drop-api',
+    version: '1.1.3',
+    sourceRevision: candidateRevision,
+    status: 'ready'
+  });
+  expect(body.deploymentId).toEqual(expect.stringMatching(/\S+/));
+});
 
 for (const route of ['/', '/demo', '/privacy', '/terms', '/missing-page']) {
   test(`deployed ${route} has correct identity and no serious accessibility violations`, async ({ page }) => {

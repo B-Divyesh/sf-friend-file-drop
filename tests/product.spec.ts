@@ -331,10 +331,40 @@ test('an established direct transfer survives receiver rejoin and sender reopen 
   const receiverContext = await browser.newContext();
   const sender = await senderContext.newPage();
   const receiver = await receiverContext.newPage();
+  // Stop the first data channel after a real 128 KiB prefix. The old test
+  // relied on an 8 MiB payload being slow enough to reload mid-transfer,
+  // which made its runtime depend on worker load. sessionStorage survives the
+  // sender reload, so the replacement channel sends the remainder normally.
+  await sender.addInitScript(() => {
+    const nativeSend = RTCDataChannel.prototype.send;
+    let binaryChunks = 0;
+    const interruptThisPage = sessionStorage.getItem('test:resume-prefix-saved') !== '1';
+    let dropRemainingMessages = false;
+    Object.defineProperty(RTCDataChannel.prototype, 'send', {
+      configurable: true,
+      value(this: RTCDataChannel, data: string | Blob | ArrayBuffer | ArrayBufferView) {
+        if (!interruptThisPage) {
+          Reflect.apply(nativeSend, this, [data]);
+          return;
+        }
+        if (dropRemainingMessages) return;
+        if (data instanceof ArrayBuffer) {
+          Reflect.apply(nativeSend, this, [data]);
+          binaryChunks += 1;
+          if (binaryChunks === 4) {
+            sessionStorage.setItem('test:resume-prefix-saved', '1');
+            dropRemainingMessages = true;
+          }
+          return;
+        }
+        Reflect.apply(nativeSend, this, [data]);
+      }
+    });
+  });
   const rooms = new Map<string, MockRoom>();
   await Promise.all([installRoomApi(sender, rooms), installRoomApi(receiver, rooms)]);
   await Promise.all([sender.goto('/'), receiver.goto('/')]);
-  const data = Buffer.alloc(8 * 1024 * 1024, 97);
+  const data = Buffer.alloc(512 * 1024, 97);
   await sender.locator('#file-input').setInputFiles({ name: 'resume.bin', mimeType: 'application/octet-stream', buffer: data });
   const transferId = await sender.locator('#real-files .file-row').getAttribute('data-file-id');
   expect(transferId).toMatch(/^[a-f0-9-]{36}$/);
@@ -400,8 +430,7 @@ test('an established direct transfer survives receiver rejoin and sender reopen 
   await expect(sender.getByText(`Resuming resume.bin at ${Math.round(persistedOffset / 1024)} KB.`)).toBeVisible({ timeout: 12_000 });
   await expect(receiver.getByRole('heading', { name: 'Transfer finished' })).toBeVisible({ timeout: 20_000 });
   await expect(sender.getByRole('heading', { name: 'Transfer finished' })).toBeVisible({ timeout: 20_000 });
-  await receiverContext.close();
-  await senderContext.close();
+  await Promise.all([receiverContext.close(), senderContext.close()]);
 });
 
 test('relay needs both choices and removes bytes after receipt @claim:opt-in-relay', async ({ browser }) => {

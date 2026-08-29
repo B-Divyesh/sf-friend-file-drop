@@ -141,9 +141,9 @@
   },
   {
     "id": "api-health",
-    "claim": "The managed API exposes a health response with service and build identity.",
+    "claim": "The managed API reports ready only with its exact source revision and deployment identity.",
     "where": "README deployment notes",
     "test": "node --test --test-name-pattern=@claim:api-health api/integration.test.js",
-    "sandbox": "isolated function invocation; assert the public health JSON has service, version, and no-store response policy"
+    "sandbox": "isolated function invocation; inject distinct source, fallback, and deployment values; assert the exact preferred source revision, deployment identity, ready status, and no-store response policy"
   }
 ]
