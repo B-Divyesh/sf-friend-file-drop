@@ -35,6 +35,8 @@ managed API.
 - Focused two-worker regression command passed: `npx playwright test
   tests/product.spec.ts --workers=2 --grep
   '@claim:opt-in-relay|@regression:parallel-relay-isolation' --reporter=line`.
+  The same two tests also passed on the isolated `PLAYWRIGHT_PORT=4189` preview
+  port, proving the configurable server isolation path.
 - All **20/20** commands declared in `.factory/claims.json` passed individually,
   including the three API claims and every browser/demo/privacy/relay claim.
 - `npm audit --omit=dev --audit-level=high` and the API equivalent both found
