@@ -45,7 +45,9 @@ See [`/privacy`](https://friend-file-drop.sociobot.in/privacy) and [`/terms`](ht
 
 ## Deploy
 
-Deploy `dist/` with the managed functions in `api/` to Azure Static Web Apps. Set `FRIEND_FILE_DROP_SOURCE_REVISION` to the full deployed commit SHA. `public/staticwebapp.config.json` provides explicit SPA routes, a real styled 404 response, security headers, and immutable caching for fingerprinted assets. The API exposes `GET /api/health` with its service, version, exact source revision, and deployment identity. It reports unavailable when either identity value is missing. Deployment, DNS, and billing stay outside this repository.
+After committing and pushing `main`, run `scripts/deploy-static.sh`. It builds `dist/` and deploys the site and managed API. It sets `FRIEND_FILE_DROP_SOURCE_REVISION` to the full deployed commit SHA. The deployment fails unless live `/api/health` reports that exact SHA.
+
+`public/staticwebapp.config.json` defines the SPA routes, styled 404, security headers, and immutable asset caching. Health also reports the managed deployment identity. It reports unavailable when either identity value is missing. DNS and billing stay outside this repository.
 
 ## Project notes
 

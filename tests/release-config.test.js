@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import packageJson from '../package.json' with { type: 'json' };
 
 test('hashed assets receive immutable caching and unknown paths remain 404', async () => {
   const config = JSON.parse(await readFile(new URL('../public/staticwebapp.config.json', import.meta.url), 'utf8'));
@@ -18,4 +19,13 @@ test('static 404 has full identity metadata and the standard navigation', async 
     'name="twitter:description"', 'name="twitter:image"', 'rel="apple-touch-icon"',
     'href="/#how"', 'href="/privacy"', 'href="/terms"'
   ]) assert.match(html, new RegExp(required));
+  assert.match(html, new RegExp(`Built by Param Factory · v${packageJson.version.replaceAll('.', '\\.')}`));
+});
+
+test('release deploy wires the clean full candidate SHA into API settings and verifies it live', async () => {
+  const script = await readFile(new URL('../scripts/deploy-static.sh', import.meta.url), 'utf8');
+  assert.match(script, /git status --porcelain/);
+  assert.match(script, /git ls-remote --exit-code origin/);
+  assert.match(script, /FRIEND_FILE_DROP_SOURCE_REVISION=\$\{candidate_revision\}/);
+  assert.match(script, /verify-live-identity\.mjs" "\$\{live_url\}" "\$\{candidate_revision\}"/);
 });
