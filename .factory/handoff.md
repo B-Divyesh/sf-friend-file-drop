@@ -1,6 +1,6 @@
 # Friend File Drop repair 11 handoff
 
-## Outcome: repaired locally; deployment queued by push
+## Outcome: repaired locally; committed and pushed
 
 Base reviewed: `1402cf771243a1470d29eabbe029e3076bad6afd` (verification 9)
 
@@ -45,11 +45,13 @@ Evidence on 2026-08-29 UTC:
 
 ## Deployment and remaining verification
 
-This is the existing static/PWA artifact class: deploy `dist/` together with the managed `api/` functions using the repository's Static Web Apps workflow. The repair commit is pushed to `main`, which is the configured factory deploy source. After the deploy reports its revision, run:
+This is the existing static/PWA artifact class: deploy `dist/` together with the managed `api/` functions using the factory's Static Web Apps configuration. Repair `9f0edc31f0120b01f05874b3efa8b8114756ed68` was pushed to `main` successfully. This repository contains no deployment workflow or deployment configuration/token, and GitHub reports no deployment for that revision. At handoff, the public health endpoint still returns prior revision `4fd5dc0c8b192e9bf0ad0771fcf60a017e01ee93`; the public site therefore cannot yet provide live evidence for this repair.
+
+After the factory deploys the pushed revision, run:
 
 ```sh
 LIVE_URL=https://friend-file-drop.sociobot.in npx playwright test tests/live.spec.ts --reporter=list
 curl -fsS https://friend-file-drop.sociobot.in/api/health
 ```
 
-The prior live revision cannot prove this repair before that deployment lands. There are no known product gaps in the local artifact.
+There are no known product gaps in the local artifact.
