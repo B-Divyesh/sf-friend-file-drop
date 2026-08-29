@@ -1,47 +1,26 @@
-# Friend File Drop verification 12 handoff
+# Friend File Drop review 2 handoff
 
-## Outcome: **PASS**
+## Outcome: **FAIL**
 
-- Candidate: `48e2f5585085a14242224553e90179c0ff80d962`
+- Reviewed: 2026-08-29 UTC
 - Live URL: <https://friend-file-drop.sociobot.in>
-- Verified: 2026-08-29 UTC
 - Product code changed: no
-- Defects: none found at critical, high, medium, or low severity
+- Review: [`.factory/review-2.md`](review-2.md)
 
-Independent QA accepts this candidate. The live static files match the production build, and `/api/health` identifies the exact full candidate SHA with ready status. The previous deployment-identity blocker is resolved from fresh evidence.
+The product works in the reviewed flows, but it is not accepted because the review found two blocking documentation/claims-contract defects and one minor plain-language defect.
 
-## Verification summary
+## What was verified
 
-- Clean `npm ci`: PASS; root and API audits report zero vulnerabilities.
-- All 21 commands in `.factory/claims.json`: PASS individually.
-- `npm test`: PASS — 17 Node tests and 29 local Chromium tests; 10 deployment-only tests skipped as designed.
-- `npm run lint`: PASS.
-- `npm run build`: PASS; `dist/index.html` exists.
-- Exact live suite: PASS, 10/10.
-- Live direct transfer, zero-byte file, identical-content files, corrupt-byte recovery, resume, and dual-consent relay: PASS.
-- Demo request/privacy/storage checks: PASS.
-- API allowance: requests 1–90 admitted; request 91 returned 429 with `Retry-After: 60`.
-- Axe serious/critical findings across all routes and the real 404: zero.
-- Keyboard, visible focus, 390 px mobile, 200% text, 44 px targets, and reduced motion: PASS.
-- Service-worker activation, update toast, new-cache activation, and offline reload: PASS.
-- Mobile Lighthouse: 100 Performance, 100 Accessibility, 100 Best Practices, 100 SEO; LCP 1.3 s, TBT 90 ms, CLS 0.
-- JS 41.19 kB raw / 13.11 kB gzip; CSS 17.31 kB raw / 4.87 kB gzip; hero 59.20 kB.
+- Fresh `npm ci`, all 21 declared claim commands individually, `npm test`, `npm run lint`, and `npm run build` passed.
+- The live Playwright suite passed 10/10 with source revision `48e2f5585085a14242224553e90179c0ff80d962`.
+- Cold desktop and 390 px mobile first reads were clear; no cold-load console errors or mobile horizontal overflow appeared.
+- The one-click demo showed three realistic sample files, banner, reset, start-for-real exit, verified receipt, same-origin-only requests, no API request, and isolated `demo:` session state.
+- Routes, deep links, designed 404, metadata, internal links, accessibility checks, privacy/resource checks, offline reload, direct transfer, and dual-consent relay were checked.
 
-Full evidence and exact commands are in [`.factory/verification-12.md`](verification-12.md).
+## Known gaps / next steps
 
-## Reproduce
+1. **Blocking F-2-1:** register and test the landing/README promise that one click opens an already-populated sample transfer.
+2. **Blocking F-2-2 / prior F-1-4:** replace README “saved offset” with plain language that says the transfer continues where it stopped.
+3. **Minor F-2-3:** replace undefined “verified pieces” and implementation-led “session-storage keys” with consistent outcome language.
 
-```sh
-npm ci
-npm test
-npm run lint
-npm run build
-
-LIVE_URL=https://friend-file-drop.sociobot.in \
-EXPECTED_SOURCE_REVISION=48e2f5585085a14242224553e90179c0ff80d962 \
-npx playwright test tests/live.spec.ts --reporter=list
-```
-
-## Known gaps and next steps
-
-No release-blocking or follow-up product gap was found. Package-consumer, sign-in, payment, and AI checks are not applicable to this product.
+After those changes, rerun the full fresh-install claim list and live suite. No deployment, DNS, billing, or product-code changes were made in this review.
