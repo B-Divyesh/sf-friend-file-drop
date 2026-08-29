@@ -15,12 +15,32 @@ for (const route of ['/', '/demo', '/privacy', '/terms', '/missing-page']) {
   });
 }
 
+test('deployed demo stays same-origin and Start for real discards its state @regression:live-demo-exit-clears', async ({ page }) => {
+  const foreignRequests: string[] = [];
+  page.on('request', (request) => {
+    if (new URL(request.url()).origin !== new URL(liveUrl!).origin) foreignRequests.push(request.url());
+  });
+  await page.goto(`${liveUrl}/demo`);
+  await page.getByRole('button', { name: 'Send sample files' }).click();
+  await expect(page.getByRole('heading', { name: 'Transfer finished' })).toBeVisible();
+  expect(await page.evaluate(() => Object.keys(sessionStorage).filter((key) => key.startsWith('demo:')))).toEqual(['demo:completed']);
+  await page.getByRole('link', { name: 'Start for real' }).click();
+  expect(await page.evaluate(() => Object.keys(sessionStorage).filter((key) => key.startsWith('demo:')))).toEqual([]);
+  await page.getByRole('link', { name: 'Demo', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Send sample files' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Transfer finished' })).toHaveCount(0);
+  expect(foreignRequests).toEqual([]);
+});
+
 test('deployed demo reloads offline after service-worker control', async ({ page, context }) => {
   await page.goto(`${liveUrl}/demo`);
-  await page.evaluate(async () => {
-    await navigator.serviceWorker.ready;
+  const workerState = await page.evaluate(async () => {
+    const registration = await navigator.serviceWorker.ready;
+    await registration.update();
     if (!navigator.serviceWorker.controller) await new Promise<void>((resolve) => navigator.serviceWorker.addEventListener('controllerchange', () => resolve(), { once: true }));
+    return registration.active?.state;
   });
+  expect(workerState).toBe('activated');
   await page.reload();
   await context.setOffline(true);
   await page.reload();
@@ -28,7 +48,7 @@ test('deployed demo reloads offline after service-worker control', async ({ page
   await expect(page.getByRole('heading', { name: 'Send sample files and check the receipt' })).toBeVisible();
 });
 
-test('deployed six-word room completes a direct browser transfer', async ({ browser }) => {
+test('deployed direct transfer withholds receipts for corrupt bytes until a verified retry @regression:live-corrupt-direct-receipt', async ({ browser }) => {
   const senderContext = await browser.newContext();
   const receiverContext = await browser.newContext();
   const sender = await senderContext.newPage();
@@ -41,6 +61,24 @@ test('deployed six-word room completes a direct browser transfer', async ({ brow
   await receiver.locator('#room-code').fill(code);
   await receiver.getByRole('button', { name: 'Join this room' }).click();
   await expect(sender.getByText('Devices connected. The direct path is ready.')).toBeVisible({ timeout: 15_000 });
+  await sender.evaluate(() => {
+    const nativeSlice = File.prototype.slice;
+    Object.defineProperty(window, '__restoreFileSlice', {
+      configurable: true,
+      value: () => { File.prototype.slice = nativeSlice; }
+    });
+    File.prototype.slice = function (this: File, start = 0, end = this.size, contentType = this.type): Blob {
+      return new Blob([new Uint8Array(Math.max(0, end - start)).fill(120)], { type: contentType });
+    };
+  });
+  await sender.getByRole('button', { name: 'Send 1 file' }).click();
+  await expect(receiver.getByText('live-direct.txt did not match its hash. Rejoin to retry it.')).toBeVisible({ timeout: 15_000 });
+  await expect(receiver.locator('#real-files .file-status')).toHaveText('Failed');
+  await expect(receiver.getByRole('link', { name: 'Save file' })).toHaveCount(0);
+  await expect(receiver.getByRole('heading', { name: 'Transfer finished' })).toHaveCount(0);
+  await expect(sender.getByRole('heading', { name: 'Transfer finished' })).toHaveCount(0);
+  await sender.waitForTimeout(250);
+  await sender.evaluate(() => (window as typeof window & { __restoreFileSlice: () => void }).__restoreFileSlice());
   await sender.getByRole('button', { name: 'Send 1 file' }).click();
   await expect(receiver.getByRole('heading', { name: 'Transfer finished' })).toBeVisible({ timeout: 15_000 });
   await expect(sender.getByRole('heading', { name: 'Transfer finished' })).toBeVisible();
