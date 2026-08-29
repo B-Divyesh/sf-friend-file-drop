@@ -1,0 +1,177 @@
+
+> friend-file-drop@1.1.2 test
+> npm run test:unit && npm run build && playwright test
+
+
+> friend-file-drop@1.1.2 test:unit
+> node --test api/lib/store.test.js api/integration.test.js tests/release-config.test.js
+
+TAP version 13
+# Subtest: room API signals, requires dual relay consent, relays, and clears bytes
+ok 1 - room API signals, requires dual relay consent, relays, and clears bytes
+  ---
+  duration_ms: 4.508629
+  type: 'test'
+  ...
+# Subtest: concurrent relay-consent updates retain both choices @regression:durable-room-consent
+ok 2 - concurrent relay-consent updates retain both choices @regression:durable-room-consent
+  ---
+  duration_ms: 2.536016
+  type: 'test'
+  ...
+# Subtest: configured production refuses per-instance memory rooms @regression:durable-room-required
+ok 3 - configured production refuses per-instance memory rooms @regression:durable-room-required
+  ---
+  duration_ms: 0.851605
+  type: 'test'
+  ...
+# Subtest: room and relay endpoints rate limit a server-derived identity and always send Retry-After
+ok 4 - room and relay endpoints rate limit a server-derived identity and always send Retry-After
+  ---
+  duration_ms: 10.693967
+  type: 'test'
+  ...
+# Subtest: health endpoint identifies the deployed API build @claim:api-health
+ok 5 - health endpoint identifies the deployed API build @claim:api-health
+  ---
+  duration_ms: 0.637804
+  type: 'test'
+  ...
+# Subtest: rooms expire after fifteen minutes @claim:room-expiry
+ok 6 - rooms expire after fifteen minutes @claim:room-expiry
+  ---
+  duration_ms: 0.943606
+  type: 'test'
+  ...
+# Subtest: relay requires two explicit consents and enforces its byte cap @claim:relay-cap
+ok 7 - relay requires two explicit consents and enforces its byte cap @claim:relay-cap
+  ---
+  duration_ms: 0.593404
+  type: 'test'
+  ...
+# Subtest: request bursts are rate limited
+ok 8 - request bursts are rate limited
+  ---
+  duration_ms: 0.367502
+  type: 'test'
+  ...
+# Subtest: client identity never trusts caller-controlled forwarding headers
+ok 9 - client identity never trusts caller-controlled forwarding headers
+  ---
+  duration_ms: 0.224402
+  type: 'test'
+  ...
+# Subtest: hashed assets receive immutable caching and unknown paths remain 404
+ok 10 - hashed assets receive immutable caching and unknown paths remain 404
+  ---
+  duration_ms: 8.546153
+  type: 'test'
+  ...
+# Subtest: static 404 has full identity metadata and the standard navigation
+ok 11 - static 404 has full identity metadata and the standard navigation
+  ---
+  duration_ms: 2.272214
+  type: 'test'
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 162.418524
+
+> friend-file-drop@1.1.2 build
+> npm run typecheck && vite build
+
+
+> friend-file-drop@1.1.2 typecheck
+> tsc --noEmit
+
+vite v6.4.3 building for production...
+transforming...
+✓ 7 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                  1.96 kB │ gzip:  0.66 kB
+dist/assets/index-C_88kP3x.css  17.31 kB │ gzip:  4.87 kB
+dist/assets/index-CmAfhcAd.js   37.99 kB │ gzip: 12.24 kB │ map: 83.77 kB
+✓ built in 259ms
+[WebServer] (node:11059) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 37 tests using 2 workers
+
+  -   1 [chromium] › tests/live.spec.ts:8:3 › deployed / has correct identity and no serious accessibility violations
+  -   2 [chromium] › tests/live.spec.ts:8:3 › deployed /demo has correct identity and no serious accessibility violations
+  -   3 [chromium] › tests/live.spec.ts:8:3 › deployed /privacy has correct identity and no serious accessibility violations
+  -   4 [chromium] › tests/live.spec.ts:8:3 › deployed /terms has correct identity and no serious accessibility violations
+  -   5 [chromium] › tests/live.spec.ts:8:3 › deployed /missing-page has correct identity and no serious accessibility violations
+  -   6 [chromium] › tests/live.spec.ts:27:1 › deployed one-click demo stays same-origin and exit discards its state @regression:live-demo-exit-clears
+  -   7 [chromium] › tests/live.spec.ts:46:1 › deployed demo reloads offline after service-worker control
+  -   8 [chromium] › tests/live.spec.ts:62:1 › deployed direct transfer withholds receipts for corrupt bytes until a verified retry @regression:live-corrupt-direct-receipt
+  -   9 [chromium] › tests/live.spec.ts:100:1 › deployed relay keeps a room across instances and transfers only after both browsers opt in @regression:live-durable-relay
+(node:11077) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:11078) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:11077) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:11078) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  10 [chromium] › tests/product.spec.ts:180:1 › sample transfer produces a three-file receipt @claim:demo-receipt (2.0s)
+  ✓  12 [chromium] › tests/product.spec.ts:190:1 › demo opens without an account step @claim:no-account (415ms)
+  ✓  13 [chromium] › tests/product.spec.ts:196:1 › the free version has no payment action @claim:free-use (636ms)
+  ✓  11 [chromium] › tests/product.spec.ts:131:1 › late direct answer cannot replace relay consent state @regression:relay-consent-state-race (3.8s)
+  ✓  14 [chromium] › tests/product.spec.ts:202:1 › the first-screen sample action enters the isolated query route in one click (719ms)
+  ✓  16 [chromium] › tests/product.spec.ts:234:1 › demo reloads after the network is turned off @claim:offline-reload (893ms)
+  ✓  17 [chromium] › tests/product.spec.ts:247:1 › selected file details appear before a room exists @claim:manifest-before-transfer (719ms)
+  ✓  15 [chromium] › tests/product.spec.ts:210:1 › demo stays isolated and leaving clears its session @claim:demo-isolation @claim:demo-no-real-files @regression:demo-exit-clears (2.0s)
+  ✓  19 [chromium] › tests/product.spec.ts:311:1 › saved direct chunks resume at the verified offset @claim:resumable-transfer (3.5s)
+  ✓  18 [chromium] › tests/product.spec.ts:265:1 › direct transfer withholds receipts for corrupt bytes until a verified retry @claim:six-word-room @claim:direct-transfer @claim:local-receipts @regression:corrupt-direct-receipt (4.9s)
+  ✓  20 [chromium] › tests/product.spec.ts:355:1 › relay needs both choices and removes bytes after receipt @claim:opt-in-relay (5.9s)
+  ✓  21 [chromium] › tests/product.spec.ts:368:1 › isolated relay rooms do not cross consent or bytes when run together @regression:parallel-relay-isolation (7.0s)
+  ✓  23 [chromium] › tests/product.spec.ts:424:1 › receipt history exports and imports complete receipt records @claim:receipt-export @claim:receipt-import (901ms)
+  ✓  22 [chromium] › tests/product.spec.ts:391:1 › same-content files keep separate verified rows and receipts @claim:individual-file-receipts @claim:own-files-untouched (3.5s)
+  ✓  25 [chromium] › tests/product.spec.ts:467:1 › privacy boundaries match storage and loaded resources @claim:privacy-boundaries (624ms)
+  ✓  24 [chromium] › tests/product.spec.ts:453:1 › the saved room code is visible, documented, and removable @claim:room-code-storage (1.5s)
+  ✓  26 [chromium] › tests/product.spec.ts:478:3 › page / has one clear heading and no serious accessibility errors (1.9s)
+  ✓  27 [chromium] › tests/product.spec.ts:478:3 › page /demo has one clear heading and no serious accessibility errors (1.5s)
+  ✓  28 [chromium] › tests/product.spec.ts:478:3 › page /privacy has one clear heading and no serious accessibility errors (1.5s)
+  ✓  29 [chromium] › tests/product.spec.ts:478:3 › page /terms has one clear heading and no serious accessibility errors (1.5s)
+  ✓  31 [chromium] › tests/product.spec.ts:509:1 › unknown addresses show the notebook 404 page (525ms)
+  ✓  30 [chromium] › tests/product.spec.ts:487:1 › history routes update titles, metadata, focus, and legal links (1.2s)
+  ✓  32 [chromium] › tests/product.spec.ts:516:1 › mobile first screen keeps the actions visible (612ms)
+  ✓  33 [chromium] › tests/product.spec.ts:524:1 › keyboard users can reveal skip navigation and switch transfer roles with arrows (880ms)
+  ✓  34 [chromium] › tests/product.spec.ts:534:1 › the visible file chooser shows the focused input state (820ms)
+  ✓  35 [chromium] › tests/product.spec.ts:541:1 › 390px layout reflows at 200 percent text size (666ms)
+  ✓  36 [chromium] › tests/product.spec.ts:548:1 › full pre-transfer hash stays inside the mobile layout (599ms)
+  ✓  37 [chromium] › tests/product.spec.ts:556:1 › mobile interactive targets remain at least 44 CSS pixels (307ms)
+
+  9 skipped
+  28 passed (28.5s)
+
+> friend-file-drop@1.1.2 lint
+> tsc --noEmit
+
+
+> friend-file-drop@1.1.2 build
+> npm run typecheck && vite build
+
+
+> friend-file-drop@1.1.2 typecheck
+> tsc --noEmit
+
+vite v6.4.3 building for production...
+transforming...
+✓ 7 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                  1.96 kB │ gzip:  0.66 kB
+dist/assets/index-C_88kP3x.css  17.31 kB │ gzip:  4.87 kB
+dist/assets/index-CmAfhcAd.js   37.99 kB │ gzip: 12.24 kB │ map: 83.77 kB
+✓ built in 252ms
+found 0 vulnerabilities
+found 0 vulnerabilities

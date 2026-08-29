@@ -1,0 +1,24 @@
+[1A[2K[WebServer] (node:10023) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+
+Running 9 tests using 1 worker
+
+[1A[2K(node:10042) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K(node:10042) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K[1/9] [chromium] › tests/live.spec.ts:8:3 › deployed / has correct identity and no serious accessibility violations
+[1A[2K[2/9] [chromium] › tests/live.spec.ts:8:3 › deployed /demo has correct identity and no serious accessibility violations
+[1A[2K[3/9] [chromium] › tests/live.spec.ts:8:3 › deployed /privacy has correct identity and no serious accessibility violations
+[1A[2K[4/9] [chromium] › tests/live.spec.ts:8:3 › deployed /terms has correct identity and no serious accessibility violations
+[1A[2K[5/9] [chromium] › tests/live.spec.ts:8:3 › deployed /missing-page has correct identity and no serious accessibility violations
+[1A[2K[6/9] [chromium] › tests/live.spec.ts:27:1 › deployed one-click demo stays same-origin and exit discards its state @regression:live-demo-exit-clears
+[1A[2K[7/9] [chromium] › tests/live.spec.ts:46:1 › deployed demo reloads offline after service-worker control
+[1A[2K[8/9] [chromium] › tests/live.spec.ts:62:1 › deployed direct transfer withholds receipts for corrupt bytes until a verified retry @regression:live-corrupt-direct-receipt
+[1A[2K[9/9] [chromium] › tests/live.spec.ts:100:1 › deployed relay keeps a room across instances and transfers only after both browsers opt in @regression:live-durable-relay
+[1A[2K  9 passed (28.5s)

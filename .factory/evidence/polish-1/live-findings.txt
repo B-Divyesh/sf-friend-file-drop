@@ -1,0 +1,4 @@
+PASS F-1-1 live manifest and receipt wording
+PASS F-1-2 live 404 status, metadata, and header parity
+PASS F-1-3 live terminology removal and replacements
+PASS one-click query demo isolation and reset

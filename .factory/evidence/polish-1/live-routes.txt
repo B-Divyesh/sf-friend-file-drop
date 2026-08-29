@@ -1,0 +1,6 @@
+200 https://friend-file-drop.sociobot.in/
+200 https://friend-file-drop.sociobot.in/?demo=1
+200 https://friend-file-drop.sociobot.in/demo
+200 https://friend-file-drop.sociobot.in/privacy
+200 https://friend-file-drop.sociobot.in/terms
+404 https://friend-file-drop.sociobot.in/missing-page

@@ -1,0 +1,2125 @@
+===== CLAIM demo-receipt =====
+
+> friend-file-drop@1.1.2 test
+> npm run test:unit && npm run build && playwright test --grep @claim:demo-receipt
+
+
+> friend-file-drop@1.1.2 test:unit
+> node --test api/lib/store.test.js api/integration.test.js tests/release-config.test.js
+
+TAP version 13
+# Subtest: room API signals, requires dual relay consent, relays, and clears bytes
+ok 1 - room API signals, requires dual relay consent, relays, and clears bytes
+  ---
+  duration_ms: 4.604526
+  type: 'test'
+  ...
+# Subtest: concurrent relay-consent updates retain both choices @regression:durable-room-consent
+ok 2 - concurrent relay-consent updates retain both choices @regression:durable-room-consent
+  ---
+  duration_ms: 2.504114
+  type: 'test'
+  ...
+# Subtest: configured production refuses per-instance memory rooms @regression:durable-room-required
+ok 3 - configured production refuses per-instance memory rooms @regression:durable-room-required
+  ---
+  duration_ms: 0.842005
+  type: 'test'
+  ...
+# Subtest: room and relay endpoints rate limit a server-derived identity and always send Retry-After
+ok 4 - room and relay endpoints rate limit a server-derived identity and always send Retry-After
+  ---
+  duration_ms: 12.246368
+  type: 'test'
+  ...
+# Subtest: health endpoint identifies the deployed API build @claim:api-health
+ok 5 - health endpoint identifies the deployed API build @claim:api-health
+  ---
+  duration_ms: 0.855605
+  type: 'test'
+  ...
+# Subtest: rooms expire after fifteen minutes @claim:room-expiry
+ok 6 - rooms expire after fifteen minutes @claim:room-expiry
+  ---
+  duration_ms: 0.946805
+  type: 'test'
+  ...
+# Subtest: relay requires two explicit consents and enforces its byte cap @claim:relay-cap
+ok 7 - relay requires two explicit consents and enforces its byte cap @claim:relay-cap
+  ---
+  duration_ms: 7.202839
+  type: 'test'
+  ...
+# Subtest: request bursts are rate limited
+ok 8 - request bursts are rate limited
+  ---
+  duration_ms: 0.393902
+  type: 'test'
+  ...
+# Subtest: client identity never trusts caller-controlled forwarding headers
+ok 9 - client identity never trusts caller-controlled forwarding headers
+  ---
+  duration_ms: 0.249302
+  type: 'test'
+  ...
+# Subtest: hashed assets receive immutable caching and unknown paths remain 404
+ok 10 - hashed assets receive immutable caching and unknown paths remain 404
+  ---
+  duration_ms: 12.130967
+  type: 'test'
+  ...
+# Subtest: static 404 has full identity metadata and the standard navigation
+ok 11 - static 404 has full identity metadata and the standard navigation
+  ---
+  duration_ms: 3.161018
+  type: 'test'
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 179.230091
+
+> friend-file-drop@1.1.2 build
+> npm run typecheck && vite build
+
+
+> friend-file-drop@1.1.2 typecheck
+> tsc --noEmit
+
+vite v6.4.3 building for production...
+transforming...
+✓ 7 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                  1.96 kB │ gzip:  0.66 kB
+dist/assets/index-C_88kP3x.css  17.31 kB │ gzip:  4.87 kB
+dist/assets/index-CmAfhcAd.js   37.99 kB │ gzip: 12.24 kB │ map: 83.77 kB
+✓ built in 262ms
+[WebServer] (node:4778) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+(node:4796) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:4796) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [chromium] › tests/product.spec.ts:180:1 › sample transfer produces a three-file receipt @claim:demo-receipt (1.4s)
+
+  1 passed (3.6s)
+PASS demo-receipt
+===== CLAIM manifest-before-transfer =====
+
+> friend-file-drop@1.1.2 test
+> npm run test:unit && npm run build && playwright test --grep @claim:manifest-before-transfer
+
+
+> friend-file-drop@1.1.2 test:unit
+> node --test api/lib/store.test.js api/integration.test.js tests/release-config.test.js
+
+TAP version 13
+# Subtest: room API signals, requires dual relay consent, relays, and clears bytes
+ok 1 - room API signals, requires dual relay consent, relays, and clears bytes
+  ---
+  duration_ms: 3.127518
+  type: 'test'
+  ...
+# Subtest: concurrent relay-consent updates retain both choices @regression:durable-room-consent
+ok 2 - concurrent relay-consent updates retain both choices @regression:durable-room-consent
+  ---
+  duration_ms: 1.644809
+  type: 'test'
+  ...
+# Subtest: configured production refuses per-instance memory rooms @regression:durable-room-required
+ok 3 - configured production refuses per-instance memory rooms @regression:durable-room-required
+  ---
+  duration_ms: 0.548703
+  type: 'test'
+  ...
+# Subtest: room and relay endpoints rate limit a server-derived identity and always send Retry-After
+ok 4 - room and relay endpoints rate limit a server-derived identity and always send Retry-After
+  ---
+  duration_ms: 11.221562
+  type: 'test'
+  ...
+# Subtest: health endpoint identifies the deployed API build @claim:api-health
+ok 5 - health endpoint identifies the deployed API build @claim:api-health
+  ---
+  duration_ms: 0.610804
+  type: 'test'
+  ...
+# Subtest: rooms expire after fifteen minutes @claim:room-expiry
+ok 6 - rooms expire after fifteen minutes @claim:room-expiry
+  ---
+  duration_ms: 0.965306
+  type: 'test'
+  ...
+# Subtest: relay requires two explicit consents and enforces its byte cap @claim:relay-cap
+ok 7 - relay requires two explicit consents and enforces its byte cap @claim:relay-cap
+  ---
+  duration_ms: 0.583303
+  type: 'test'
+  ...
+# Subtest: request bursts are rate limited
+ok 8 - request bursts are rate limited
+  ---
+  duration_ms: 0.331202
+  type: 'test'
+  ...
+# Subtest: client identity never trusts caller-controlled forwarding headers
+ok 9 - client identity never trusts caller-controlled forwarding headers
+  ---
+  duration_ms: 0.217601
+  type: 'test'
+  ...
+# Subtest: hashed assets receive immutable caching and unknown paths remain 404
+ok 10 - hashed assets receive immutable caching and unknown paths remain 404
+  ---
+  duration_ms: 7.504742
+  type: 'test'
+  ...
+# Subtest: static 404 has full identity metadata and the standard navigation
+ok 11 - static 404 has full identity metadata and the standard navigation
+  ---
+  duration_ms: 3.303519
+  type: 'test'
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 151.70004
+
+> friend-file-drop@1.1.2 build
+> npm run typecheck && vite build
+
+
+> friend-file-drop@1.1.2 typecheck
+> tsc --noEmit
+
+vite v6.4.3 building for production...
+transforming...
+✓ 7 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                  1.96 kB │ gzip:  0.66 kB
+dist/assets/index-C_88kP3x.css  17.31 kB │ gzip:  4.87 kB
+dist/assets/index-CmAfhcAd.js   37.99 kB │ gzip: 12.24 kB │ map: 83.77 kB
+✓ built in 257ms
+[WebServer] (node:5012) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+(node:5030) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:5030) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [chromium] › tests/product.spec.ts:247:1 › selected file details appear before a room exists @claim:manifest-before-transfer (589ms)
+
+  1 passed (2.5s)
+PASS manifest-before-transfer
+===== CLAIM no-account =====
+
+> friend-file-drop@1.1.2 test
+> npm run test:unit && npm run build && playwright test --grep @claim:no-account
+
+
+> friend-file-drop@1.1.2 test:unit
+> node --test api/lib/store.test.js api/integration.test.js tests/release-config.test.js
+
+TAP version 13
+# Subtest: room API signals, requires dual relay consent, relays, and clears bytes
+ok 1 - room API signals, requires dual relay consent, relays, and clears bytes
+  ---
+  duration_ms: 4.344824
+  type: 'test'
+  ...
+# Subtest: concurrent relay-consent updates retain both choices @regression:durable-room-consent
+ok 2 - concurrent relay-consent updates retain both choices @regression:durable-room-consent
+  ---
+  duration_ms: 1.81781
+  type: 'test'
+  ...
+# Subtest: configured production refuses per-instance memory rooms @regression:durable-room-required
+ok 3 - configured production refuses per-instance memory rooms @regression:durable-room-required
+  ---
+  duration_ms: 0.672004
+  type: 'test'
+  ...
+# Subtest: room and relay endpoints rate limit a server-derived identity and always send Retry-After
+ok 4 - room and relay endpoints rate limit a server-derived identity and always send Retry-After
+  ---
+  duration_ms: 40.905626
+  type: 'test'
+  ...
+# Subtest: health endpoint identifies the deployed API build @claim:api-health
+ok 5 - health endpoint identifies the deployed API build @claim:api-health
+  ---
+  duration_ms: 1.068706
+  type: 'test'
+  ...
+# Subtest: rooms expire after fifteen minutes @claim:room-expiry
+ok 6 - rooms expire after fifteen minutes @claim:room-expiry
+  ---
+  duration_ms: 1.475408
+  type: 'test'
+  ...
+# Subtest: relay requires two explicit consents and enforces its byte cap @claim:relay-cap
+ok 7 - relay requires two explicit consents and enforces its byte cap @claim:relay-cap
+  ---
+  duration_ms: 0.845104
+  type: 'test'
+  ...
+# Subtest: request bursts are rate limited
+ok 8 - request bursts are rate limited
+  ---
+  duration_ms: 0.526503
+  type: 'test'
+  ...
+# Subtest: client identity never trusts caller-controlled forwarding headers
+ok 9 - client identity never trusts caller-controlled forwarding headers
+  ---
+  duration_ms: 0.408402
+  type: 'test'
+  ...
+# Subtest: hashed assets receive immutable caching and unknown paths remain 404
+ok 10 - hashed assets receive immutable caching and unknown paths remain 404
+  ---
+  duration_ms: 7.657442
+  type: 'test'
+  ...
+# Subtest: static 404 has full identity metadata and the standard navigation
+ok 11 - static 404 has full identity metadata and the standard navigation
+  ---
+  duration_ms: 1.978411
+  type: 'test'
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 208.626254
+
+> friend-file-drop@1.1.2 build
+> npm run typecheck && vite build
+
+
+> friend-file-drop@1.1.2 typecheck
+> tsc --noEmit
+
+vite v6.4.3 building for production...
+transforming...
+✓ 7 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                  1.96 kB │ gzip:  0.66 kB
+dist/assets/index-C_88kP3x.css  17.31 kB │ gzip:  4.87 kB
+dist/assets/index-CmAfhcAd.js   37.99 kB │ gzip: 12.24 kB │ map: 83.77 kB
+✓ built in 252ms
+[WebServer] (node:5260) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+(node:5278) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:5278) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [chromium] › tests/product.spec.ts:190:1 › demo opens without an account step @claim:no-account (383ms)
+
+  1 passed (2.3s)
+PASS no-account
+===== CLAIM free-use =====
+
+> friend-file-drop@1.1.2 test
+> npm run test:unit && npm run build && playwright test --grep @claim:free-use
+
+
+> friend-file-drop@1.1.2 test:unit
+> node --test api/lib/store.test.js api/integration.test.js tests/release-config.test.js
+
+TAP version 13
+# Subtest: room API signals, requires dual relay consent, relays, and clears bytes
+ok 1 - room API signals, requires dual relay consent, relays, and clears bytes
+  ---
+  duration_ms: 4.453025
+  type: 'test'
+  ...
+# Subtest: concurrent relay-consent updates retain both choices @regression:durable-room-consent
+ok 2 - concurrent relay-consent updates retain both choices @regression:durable-room-consent
+  ---
+  duration_ms: 2.455913
+  type: 'test'
+  ...
+# Subtest: configured production refuses per-instance memory rooms @regression:durable-room-required
+ok 3 - configured production refuses per-instance memory rooms @regression:durable-room-required
+  ---
+  duration_ms: 0.829104
+  type: 'test'
+  ...
+# Subtest: room and relay endpoints rate limit a server-derived identity and always send Retry-After
+ok 4 - room and relay endpoints rate limit a server-derived identity and always send Retry-After
+  ---
+  duration_ms: 11.090462
+  type: 'test'
+  ...
+# Subtest: health endpoint identifies the deployed API build @claim:api-health
+ok 5 - health endpoint identifies the deployed API build @claim:api-health
+  ---
+  duration_ms: 0.575303
+  type: 'test'
+  ...
+# Subtest: rooms expire after fifteen minutes @claim:room-expiry
+ok 6 - rooms expire after fifteen minutes @claim:room-expiry
+  ---
+  duration_ms: 1.012306
+  type: 'test'
+  ...
+# Subtest: relay requires two explicit consents and enforces its byte cap @claim:relay-cap
+ok 7 - relay requires two explicit consents and enforces its byte cap @claim:relay-cap
+  ---
+  duration_ms: 0.579203
+  type: 'test'
+  ...
+# Subtest: request bursts are rate limited
+ok 8 - request bursts are rate limited
+  ---
+  duration_ms: 0.334302
+  type: 'test'
+  ...
+# Subtest: client identity never trusts caller-controlled forwarding headers
+ok 9 - client identity never trusts caller-controlled forwarding headers
+  ---
+  duration_ms: 0.215201
+  type: 'test'
+  ...
+# Subtest: hashed assets receive immutable caching and unknown paths remain 404
+ok 10 - hashed assets receive immutable caching and unknown paths remain 404
+  ---
+  duration_ms: 8.711449
+  type: 'test'
+  ...
+# Subtest: static 404 has full identity metadata and the standard navigation
+ok 11 - static 404 has full identity metadata and the standard navigation
+  ---
+  duration_ms: 2.193312
+  type: 'test'
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 167.565728
+
+> friend-file-drop@1.1.2 build
+> npm run typecheck && vite build
+
+
+> friend-file-drop@1.1.2 typecheck
+> tsc --noEmit
+
+vite v6.4.3 building for production...
+transforming...
+✓ 7 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                  1.96 kB │ gzip:  0.66 kB
+dist/assets/index-C_88kP3x.css  17.31 kB │ gzip:  4.87 kB
+dist/assets/index-CmAfhcAd.js   37.99 kB │ gzip: 12.24 kB │ map: 83.77 kB
+✓ built in 248ms
+[WebServer] (node:5487) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+(node:5505) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:5505) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [chromium] › tests/product.spec.ts:196:1 › the free version has no payment action @claim:free-use (525ms)
+
+  1 passed (2.5s)
+PASS free-use
+===== CLAIM demo-isolation =====
+
+> friend-file-drop@1.1.2 test
+> npm run test:unit && npm run build && playwright test --grep @claim:demo-isolation
+
+
+> friend-file-drop@1.1.2 test:unit
+> node --test api/lib/store.test.js api/integration.test.js tests/release-config.test.js
+
+TAP version 13
+# Subtest: room API signals, requires dual relay consent, relays, and clears bytes
+ok 1 - room API signals, requires dual relay consent, relays, and clears bytes
+  ---
+  duration_ms: 3.073717
+  type: 'test'
+  ...
+# Subtest: concurrent relay-consent updates retain both choices @regression:durable-room-consent
+ok 2 - concurrent relay-consent updates retain both choices @regression:durable-room-consent
+  ---
+  duration_ms: 1.651609
+  type: 'test'
+  ...
+# Subtest: configured production refuses per-instance memory rooms @regression:durable-room-required
+ok 3 - configured production refuses per-instance memory rooms @regression:durable-room-required
+  ---
+  duration_ms: 0.609303
+  type: 'test'
+  ...
+# Subtest: room and relay endpoints rate limit a server-derived identity and always send Retry-After
+ok 4 - room and relay endpoints rate limit a server-derived identity and always send Retry-After
+  ---
+  duration_ms: 8.067145
+  type: 'test'
+  ...
+# Subtest: health endpoint identifies the deployed API build @claim:api-health
+ok 5 - health endpoint identifies the deployed API build @claim:api-health
+  ---
+  duration_ms: 0.559503
+  type: 'test'
+  ...
+# Subtest: rooms expire after fifteen minutes @claim:room-expiry
+ok 6 - rooms expire after fifteen minutes @claim:room-expiry
+  ---
+  duration_ms: 1.459408
+  type: 'test'
+  ...
+# Subtest: relay requires two explicit consents and enforces its byte cap @claim:relay-cap
+ok 7 - relay requires two explicit consents and enforces its byte cap @claim:relay-cap
+  ---
+  duration_ms: 0.842405
+  type: 'test'
+  ...
+# Subtest: request bursts are rate limited
+ok 8 - request bursts are rate limited
+  ---
+  duration_ms: 0.531103
+  type: 'test'
+  ...
+# Subtest: client identity never trusts caller-controlled forwarding headers
+ok 9 - client identity never trusts caller-controlled forwarding headers
+  ---
+  duration_ms: 0.353102
+  type: 'test'
+  ...
+# Subtest: hashed assets receive immutable caching and unknown paths remain 404
+ok 10 - hashed assets receive immutable caching and unknown paths remain 404
+  ---
+  duration_ms: 13.039073
+  type: 'test'
+  ...
+# Subtest: static 404 has full identity metadata and the standard navigation
+ok 11 - static 404 has full identity metadata and the standard navigation
+  ---
+  duration_ms: 2.739516
+  type: 'test'
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 124.457289
+
+> friend-file-drop@1.1.2 build
+> npm run typecheck && vite build
+
+
+> friend-file-drop@1.1.2 typecheck
+> tsc --noEmit
+
+vite v6.4.3 building for production...
+transforming...
+✓ 7 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                  1.96 kB │ gzip:  0.66 kB
+dist/assets/index-C_88kP3x.css  17.31 kB │ gzip:  4.87 kB
+dist/assets/index-CmAfhcAd.js   37.99 kB │ gzip: 12.24 kB │ map: 83.77 kB
+✓ built in 267ms
+[WebServer] (node:5731) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+(node:5749) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:5749) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [chromium] › tests/product.spec.ts:210:1 › demo stays isolated and leaving clears its session @claim:demo-isolation @claim:demo-no-real-files @regression:demo-exit-clears (1.6s)
+
+  1 passed (3.5s)
+PASS demo-isolation
+===== CLAIM offline-reload =====
+
+> friend-file-drop@1.1.2 test
+> npm run test:unit && npm run build && playwright test --grep @claim:offline-reload
+
+
+> friend-file-drop@1.1.2 test:unit
+> node --test api/lib/store.test.js api/integration.test.js tests/release-config.test.js
+
+TAP version 13
+# Subtest: room API signals, requires dual relay consent, relays, and clears bytes
+ok 1 - room API signals, requires dual relay consent, relays, and clears bytes
+  ---
+  duration_ms: 4.586226
+  type: 'test'
+  ...
+# Subtest: concurrent relay-consent updates retain both choices @regression:durable-room-consent
+ok 2 - concurrent relay-consent updates retain both choices @regression:durable-room-consent
+  ---
+  duration_ms: 2.447614
+  type: 'test'
+  ...
+# Subtest: configured production refuses per-instance memory rooms @regression:durable-room-required
+ok 3 - configured production refuses per-instance memory rooms @regression:durable-room-required
+  ---
+  duration_ms: 0.927805
+  type: 'test'
+  ...
+# Subtest: room and relay endpoints rate limit a server-derived identity and always send Retry-After
+ok 4 - room and relay endpoints rate limit a server-derived identity and always send Retry-After
+  ---
+  duration_ms: 10.075656
+  type: 'test'
+  ...
+# Subtest: health endpoint identifies the deployed API build @claim:api-health
+ok 5 - health endpoint identifies the deployed API build @claim:api-health
+  ---
+  duration_ms: 0.595804
+  type: 'test'
+  ...
+# Subtest: rooms expire after fifteen minutes @claim:room-expiry
+ok 6 - rooms expire after fifteen minutes @claim:room-expiry
+  ---
+  duration_ms: 0.964205
+  type: 'test'
+  ...
+# Subtest: relay requires two explicit consents and enforces its byte cap @claim:relay-cap
+ok 7 - relay requires two explicit consents and enforces its byte cap @claim:relay-cap
+  ---
+  duration_ms: 0.706504
+  type: 'test'
+  ...
+# Subtest: request bursts are rate limited
+ok 8 - request bursts are rate limited
+  ---
+  duration_ms: 0.341402
+  type: 'test'
+  ...
+# Subtest: client identity never trusts caller-controlled forwarding headers
+ok 9 - client identity never trusts caller-controlled forwarding headers
+  ---
+  duration_ms: 0.219102
+  type: 'test'
+  ...
+# Subtest: hashed assets receive immutable caching and unknown paths remain 404
+ok 10 - hashed assets receive immutable caching and unknown paths remain 404
+  ---
+  duration_ms: 8.863749
+  type: 'test'
+  ...
+# Subtest: static 404 has full identity metadata and the standard navigation
+ok 11 - static 404 has full identity metadata and the standard navigation
+  ---
+  duration_ms: 2.290813
+  type: 'test'
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 133.77394
+
+> friend-file-drop@1.1.2 build
+> npm run typecheck && vite build
+
+
+> friend-file-drop@1.1.2 typecheck
+> tsc --noEmit
+
+vite v6.4.3 building for production...
+transforming...
+✓ 7 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                  1.96 kB │ gzip:  0.66 kB
+dist/assets/index-C_88kP3x.css  17.31 kB │ gzip:  4.87 kB
+dist/assets/index-CmAfhcAd.js   37.99 kB │ gzip: 12.24 kB │ map: 83.77 kB
+✓ built in 242ms
+[WebServer] (node:5958) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+(node:5976) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:5976) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [chromium] › tests/product.spec.ts:234:1 › demo reloads after the network is turned off @claim:offline-reload (562ms)
+
+  1 passed (2.5s)
+PASS offline-reload
+===== CLAIM six-word-room =====
+
+> friend-file-drop@1.1.2 test
+> npm run test:unit && npm run build && playwright test --grep @claim:six-word-room
+
+
+> friend-file-drop@1.1.2 test:unit
+> node --test api/lib/store.test.js api/integration.test.js tests/release-config.test.js
+
+TAP version 13
+# Subtest: room API signals, requires dual relay consent, relays, and clears bytes
+ok 1 - room API signals, requires dual relay consent, relays, and clears bytes
+  ---
+  duration_ms: 4.638204
+  type: 'test'
+  ...
+# Subtest: concurrent relay-consent updates retain both choices @regression:durable-room-consent
+ok 2 - concurrent relay-consent updates retain both choices @regression:durable-room-consent
+  ---
+  duration_ms: 2.446903
+  type: 'test'
+  ...
+# Subtest: configured production refuses per-instance memory rooms @regression:durable-room-required
+ok 3 - configured production refuses per-instance memory rooms @regression:durable-room-required
+  ---
+  duration_ms: 0.951101
+  type: 'test'
+  ...
+# Subtest: room and relay endpoints rate limit a server-derived identity and always send Retry-After
+ok 4 - room and relay endpoints rate limit a server-derived identity and always send Retry-After
+  ---
+  duration_ms: 10.833611
+  type: 'test'
+  ...
+# Subtest: health endpoint identifies the deployed API build @claim:api-health
+ok 5 - health endpoint identifies the deployed API build @claim:api-health
+  ---
+  duration_ms: 0.679601
+  type: 'test'
+  ...
+# Subtest: rooms expire after fifteen minutes @claim:room-expiry
+ok 6 - rooms expire after fifteen minutes @claim:room-expiry
+  ---
+  duration_ms: 1.067002
+  type: 'test'
+  ...
+# Subtest: relay requires two explicit consents and enforces its byte cap @claim:relay-cap
+ok 7 - relay requires two explicit consents and enforces its byte cap @claim:relay-cap
+  ---
+  duration_ms: 0.701601
+  type: 'test'
+  ...
+# Subtest: request bursts are rate limited
+ok 8 - request bursts are rate limited
+  ---
+  duration_ms: 0.3387
+  type: 'test'
+  ...
+# Subtest: client identity never trusts caller-controlled forwarding headers
+ok 9 - client identity never trusts caller-controlled forwarding headers
+  ---
+  duration_ms: 0.2203
+  type: 'test'
+  ...
+# Subtest: hashed assets receive immutable caching and unknown paths remain 404
+ok 10 - hashed assets receive immutable caching and unknown paths remain 404
+  ---
+  duration_ms: 8.599909
+  type: 'test'
+  ...
+# Subtest: static 404 has full identity metadata and the standard navigation
+ok 11 - static 404 has full identity metadata and the standard navigation
+  ---
+  duration_ms: 2.426903
+  type: 'test'
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 145.798353
+
+> friend-file-drop@1.1.2 build
+> npm run typecheck && vite build
+
+
+> friend-file-drop@1.1.2 typecheck
+> tsc --noEmit
+
+vite v6.4.3 building for production...
+transforming...
+✓ 7 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                  1.96 kB │ gzip:  0.66 kB
+dist/assets/index-C_88kP3x.css  17.31 kB │ gzip:  4.87 kB
+dist/assets/index-CmAfhcAd.js   37.99 kB │ gzip: 12.24 kB │ map: 83.77 kB
+✓ built in 262ms
+[WebServer] (node:6210) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+(node:6228) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:6228) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [chromium] › tests/product.spec.ts:265:1 › direct transfer withholds receipts for corrupt bytes until a verified retry @claim:six-word-room @claim:direct-transfer @claim:local-receipts @regression:corrupt-direct-receipt (3.0s)
+
+  1 passed (4.9s)
+PASS six-word-room
+===== CLAIM room-expiry =====
+TAP version 13
+# Subtest: rooms expire after fifteen minutes @claim:room-expiry
+ok 1 - rooms expire after fifteen minutes @claim:room-expiry
+  ---
+  duration_ms: 0.997601
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 75.803579
+PASS room-expiry
+===== CLAIM direct-transfer =====
+
+> friend-file-drop@1.1.2 test
+> npm run test:unit && npm run build && playwright test --grep @claim:direct-transfer
+
+
+> friend-file-drop@1.1.2 test:unit
+> node --test api/lib/store.test.js api/integration.test.js tests/release-config.test.js
+
+TAP version 13
+# Subtest: room API signals, requires dual relay consent, relays, and clears bytes
+ok 1 - room API signals, requires dual relay consent, relays, and clears bytes
+  ---
+  duration_ms: 3.413603
+  type: 'test'
+  ...
+# Subtest: concurrent relay-consent updates retain both choices @regression:durable-room-consent
+ok 2 - concurrent relay-consent updates retain both choices @regression:durable-room-consent
+  ---
+  duration_ms: 2.065402
+  type: 'test'
+  ...
+# Subtest: configured production refuses per-instance memory rooms @regression:durable-room-required
+ok 3 - configured production refuses per-instance memory rooms @regression:durable-room-required
+  ---
+  duration_ms: 0.568201
+  type: 'test'
+  ...
+# Subtest: room and relay endpoints rate limit a server-derived identity and always send Retry-After
+ok 4 - room and relay endpoints rate limit a server-derived identity and always send Retry-After
+  ---
+  duration_ms: 7.893508
+  type: 'test'
+  ...
+# Subtest: health endpoint identifies the deployed API build @claim:api-health
+ok 5 - health endpoint identifies the deployed API build @claim:api-health
+  ---
+  duration_ms: 0.569701
+  type: 'test'
+  ...
+# Subtest: rooms expire after fifteen minutes @claim:room-expiry
+ok 6 - rooms expire after fifteen minutes @claim:room-expiry
+  ---
+  duration_ms: 1.455402
+  type: 'test'
+  ...
+# Subtest: relay requires two explicit consents and enforces its byte cap @claim:relay-cap
+ok 7 - relay requires two explicit consents and enforces its byte cap @claim:relay-cap
+  ---
+  duration_ms: 0.8344
+  type: 'test'
+  ...
+# Subtest: request bursts are rate limited
+ok 8 - request bursts are rate limited
+  ---
+  duration_ms: 0.519401
+  type: 'test'
+  ...
+# Subtest: client identity never trusts caller-controlled forwarding headers
+ok 9 - client identity never trusts caller-controlled forwarding headers
+  ---
+  duration_ms: 0.327
+  type: 'test'
+  ...
+# Subtest: hashed assets receive immutable caching and unknown paths remain 404
+ok 10 - hashed assets receive immutable caching and unknown paths remain 404
+  ---
+  duration_ms: 8.760909
+  type: 'test'
+  ...
+# Subtest: static 404 has full identity metadata and the standard navigation
+ok 11 - static 404 has full identity metadata and the standard navigation
+  ---
+  duration_ms: 1.900302
+  type: 'test'
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 131.166137
+
+> friend-file-drop@1.1.2 build
+> npm run typecheck && vite build
+
+
+> friend-file-drop@1.1.2 typecheck
+> tsc --noEmit
+
+vite v6.4.3 building for production...
+transforming...
+✓ 7 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                  1.96 kB │ gzip:  0.66 kB
+dist/assets/index-C_88kP3x.css  17.31 kB │ gzip:  4.87 kB
+dist/assets/index-CmAfhcAd.js   37.99 kB │ gzip: 12.24 kB │ map: 83.77 kB
+✓ built in 270ms
+[WebServer] (node:6475) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+(node:6493) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:6493) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [chromium] › tests/product.spec.ts:265:1 › direct transfer withholds receipts for corrupt bytes until a verified retry @claim:six-word-room @claim:direct-transfer @claim:local-receipts @regression:corrupt-direct-receipt (3.1s)
+
+  1 passed (5.1s)
+PASS direct-transfer
+===== CLAIM resumable-transfer =====
+
+> friend-file-drop@1.1.2 test
+> npm run test:unit && npm run build && playwright test --grep @claim:resumable-transfer
+
+
+> friend-file-drop@1.1.2 test:unit
+> node --test api/lib/store.test.js api/integration.test.js tests/release-config.test.js
+
+TAP version 13
+# Subtest: room API signals, requires dual relay consent, relays, and clears bytes
+ok 1 - room API signals, requires dual relay consent, relays, and clears bytes
+  ---
+  duration_ms: 21.291022
+  type: 'test'
+  ...
+# Subtest: concurrent relay-consent updates retain both choices @regression:durable-room-consent
+ok 2 - concurrent relay-consent updates retain both choices @regression:durable-room-consent
+  ---
+  duration_ms: 12.179313
+  type: 'test'
+  ...
+# Subtest: configured production refuses per-instance memory rooms @regression:durable-room-required
+ok 3 - configured production refuses per-instance memory rooms @regression:durable-room-required
+  ---
+  duration_ms: 0.673401
+  type: 'test'
+  ...
+# Subtest: room and relay endpoints rate limit a server-derived identity and always send Retry-After
+ok 4 - room and relay endpoints rate limit a server-derived identity and always send Retry-After
+  ---
+  duration_ms: 8.213709
+  type: 'test'
+  ...
+# Subtest: health endpoint identifies the deployed API build @claim:api-health
+ok 5 - health endpoint identifies the deployed API build @claim:api-health
+  ---
+  duration_ms: 0.917401
+  type: 'test'
+  ...
+# Subtest: rooms expire after fifteen minutes @claim:room-expiry
+ok 6 - rooms expire after fifteen minutes @claim:room-expiry
+  ---
+  duration_ms: 1.412901
+  type: 'test'
+  ...
+# Subtest: relay requires two explicit consents and enforces its byte cap @claim:relay-cap
+ok 7 - relay requires two explicit consents and enforces its byte cap @claim:relay-cap
+  ---
+  duration_ms: 0.840301
+  type: 'test'
+  ...
+# Subtest: request bursts are rate limited
+ok 8 - request bursts are rate limited
+  ---
+  duration_ms: 0.669101
+  type: 'test'
+  ...
+# Subtest: client identity never trusts caller-controlled forwarding headers
+ok 9 - client identity never trusts caller-controlled forwarding headers
+  ---
+  duration_ms: 0.332
+  type: 'test'
+  ...
+# Subtest: hashed assets receive immutable caching and unknown paths remain 404
+ok 10 - hashed assets receive immutable caching and unknown paths remain 404
+  ---
+  duration_ms: 8.273909
+  type: 'test'
+  ...
+# Subtest: static 404 has full identity metadata and the standard navigation
+ok 11 - static 404 has full identity metadata and the standard navigation
+  ---
+  duration_ms: 1.678502
+  type: 'test'
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 146.424954
+
+> friend-file-drop@1.1.2 build
+> npm run typecheck && vite build
+
+
+> friend-file-drop@1.1.2 typecheck
+> tsc --noEmit
+
+vite v6.4.3 building for production...
+transforming...
+✓ 7 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                  1.96 kB │ gzip:  0.66 kB
+dist/assets/index-C_88kP3x.css  17.31 kB │ gzip:  4.87 kB
+dist/assets/index-CmAfhcAd.js   37.99 kB │ gzip: 12.24 kB │ map: 83.77 kB
+✓ built in 250ms
+[WebServer] (node:6718) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+(node:6736) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:6736) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [chromium] › tests/product.spec.ts:311:1 › saved direct chunks resume at the verified offset @claim:resumable-transfer (3.0s)
+
+  1 passed (4.9s)
+PASS resumable-transfer
+===== CLAIM local-receipts =====
+
+> friend-file-drop@1.1.2 test
+> npm run test:unit && npm run build && playwright test --grep @claim:local-receipts
+
+
+> friend-file-drop@1.1.2 test:unit
+> node --test api/lib/store.test.js api/integration.test.js tests/release-config.test.js
+
+TAP version 13
+# Subtest: room API signals, requires dual relay consent, relays, and clears bytes
+ok 1 - room API signals, requires dual relay consent, relays, and clears bytes
+  ---
+  duration_ms: 4.576205
+  type: 'test'
+  ...
+# Subtest: concurrent relay-consent updates retain both choices @regression:durable-room-consent
+ok 2 - concurrent relay-consent updates retain both choices @regression:durable-room-consent
+  ---
+  duration_ms: 2.425202
+  type: 'test'
+  ...
+# Subtest: configured production refuses per-instance memory rooms @regression:durable-room-required
+ok 3 - configured production refuses per-instance memory rooms @regression:durable-room-required
+  ---
+  duration_ms: 0.905501
+  type: 'test'
+  ...
+# Subtest: room and relay endpoints rate limit a server-derived identity and always send Retry-After
+ok 4 - room and relay endpoints rate limit a server-derived identity and always send Retry-After
+  ---
+  duration_ms: 7.703708
+  type: 'test'
+  ...
+# Subtest: health endpoint identifies the deployed API build @claim:api-health
+ok 5 - health endpoint identifies the deployed API build @claim:api-health
+  ---
+  duration_ms: 0.5981
+  type: 'test'
+  ...
+# Subtest: rooms expire after fifteen minutes @claim:room-expiry
+ok 6 - rooms expire after fifteen minutes @claim:room-expiry
+  ---
+  duration_ms: 1.004101
+  type: 'test'
+  ...
+# Subtest: relay requires two explicit consents and enforces its byte cap @claim:relay-cap
+ok 7 - relay requires two explicit consents and enforces its byte cap @claim:relay-cap
+  ---
+  duration_ms: 0.770301
+  type: 'test'
+  ...
+# Subtest: request bursts are rate limited
+ok 8 - request bursts are rate limited
+  ---
+  duration_ms: 0.368901
+  type: 'test'
+  ...
+# Subtest: client identity never trusts caller-controlled forwarding headers
+ok 9 - client identity never trusts caller-controlled forwarding headers
+  ---
+  duration_ms: 0.229
+  type: 'test'
+  ...
+# Subtest: hashed assets receive immutable caching and unknown paths remain 404
+ok 10 - hashed assets receive immutable caching and unknown paths remain 404
+  ---
+  duration_ms: 8.127708
+  type: 'test'
+  ...
+# Subtest: static 404 has full identity metadata and the standard navigation
+ok 11 - static 404 has full identity metadata and the standard navigation
+  ---
+  duration_ms: 1.959002
+  type: 'test'
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 155.924163
+
+> friend-file-drop@1.1.2 build
+> npm run typecheck && vite build
+
+
+> friend-file-drop@1.1.2 typecheck
+> tsc --noEmit
+
+vite v6.4.3 building for production...
+transforming...
+✓ 7 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                  1.96 kB │ gzip:  0.66 kB
+dist/assets/index-C_88kP3x.css  17.31 kB │ gzip:  4.87 kB
+dist/assets/index-CmAfhcAd.js   37.99 kB │ gzip: 12.24 kB │ map: 83.77 kB
+✓ built in 238ms
+[WebServer] (node:6981) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+(node:6999) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:6999) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [chromium] › tests/product.spec.ts:265:1 › direct transfer withholds receipts for corrupt bytes until a verified retry @claim:six-word-room @claim:direct-transfer @claim:local-receipts @regression:corrupt-direct-receipt (3.0s)
+
+  1 passed (5.0s)
+PASS local-receipts
+===== CLAIM opt-in-relay =====
+
+> friend-file-drop@1.1.2 test
+> npm run test:unit && npm run build && playwright test --grep @claim:opt-in-relay
+
+
+> friend-file-drop@1.1.2 test:unit
+> node --test api/lib/store.test.js api/integration.test.js tests/release-config.test.js
+
+TAP version 13
+# Subtest: room API signals, requires dual relay consent, relays, and clears bytes
+ok 1 - room API signals, requires dual relay consent, relays, and clears bytes
+  ---
+  duration_ms: 5.381706
+  type: 'test'
+  ...
+# Subtest: concurrent relay-consent updates retain both choices @regression:durable-room-consent
+ok 2 - concurrent relay-consent updates retain both choices @regression:durable-room-consent
+  ---
+  duration_ms: 2.506902
+  type: 'test'
+  ...
+# Subtest: configured production refuses per-instance memory rooms @regression:durable-room-required
+ok 3 - configured production refuses per-instance memory rooms @regression:durable-room-required
+  ---
+  duration_ms: 0.724501
+  type: 'test'
+  ...
+# Subtest: room and relay endpoints rate limit a server-derived identity and always send Retry-After
+ok 4 - room and relay endpoints rate limit a server-derived identity and always send Retry-After
+  ---
+  duration_ms: 6.612007
+  type: 'test'
+  ...
+# Subtest: health endpoint identifies the deployed API build @claim:api-health
+ok 5 - health endpoint identifies the deployed API build @claim:api-health
+  ---
+  duration_ms: 0.3923
+  type: 'test'
+  ...
+# Subtest: rooms expire after fifteen minutes @claim:room-expiry
+ok 6 - rooms expire after fifteen minutes @claim:room-expiry
+  ---
+  duration_ms: 1.391402
+  type: 'test'
+  ...
+# Subtest: relay requires two explicit consents and enforces its byte cap @claim:relay-cap
+ok 7 - relay requires two explicit consents and enforces its byte cap @claim:relay-cap
+  ---
+  duration_ms: 0.913201
+  type: 'test'
+  ...
+# Subtest: request bursts are rate limited
+ok 8 - request bursts are rate limited
+  ---
+  duration_ms: 0.523501
+  type: 'test'
+  ...
+# Subtest: client identity never trusts caller-controlled forwarding headers
+ok 9 - client identity never trusts caller-controlled forwarding headers
+  ---
+  duration_ms: 0.3318
+  type: 'test'
+  ...
+# Subtest: hashed assets receive immutable caching and unknown paths remain 404
+ok 10 - hashed assets receive immutable caching and unknown paths remain 404
+  ---
+  duration_ms: 6.425306
+  type: 'test'
+  ...
+# Subtest: static 404 has full identity metadata and the standard navigation
+ok 11 - static 404 has full identity metadata and the standard navigation
+  ---
+  duration_ms: 1.905902
+  type: 'test'
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 164.827673
+
+> friend-file-drop@1.1.2 build
+> npm run typecheck && vite build
+
+
+> friend-file-drop@1.1.2 typecheck
+> tsc --noEmit
+
+vite v6.4.3 building for production...
+transforming...
+✓ 7 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                  1.96 kB │ gzip:  0.66 kB
+dist/assets/index-C_88kP3x.css  17.31 kB │ gzip:  4.87 kB
+dist/assets/index-CmAfhcAd.js   37.99 kB │ gzip: 12.24 kB │ map: 83.77 kB
+✓ built in 240ms
+[WebServer] (node:7223) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+(node:7241) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:7241) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [chromium] › tests/product.spec.ts:355:1 › relay needs both choices and removes bytes after receipt @claim:opt-in-relay (3.3s)
+
+  1 passed (5.2s)
+PASS opt-in-relay
+===== CLAIM relay-cap =====
+TAP version 13
+# Subtest: relay requires two explicit consents and enforces its byte cap @claim:relay-cap
+ok 1 - relay requires two explicit consents and enforces its byte cap @claim:relay-cap
+  ---
+  duration_ms: 1.392402
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 78.331783
+PASS relay-cap
+===== CLAIM privacy-boundaries =====
+
+> friend-file-drop@1.1.2 test
+> npm run test:unit && npm run build && playwright test --grep @claim:privacy-boundaries
+
+
+> friend-file-drop@1.1.2 test:unit
+> node --test api/lib/store.test.js api/integration.test.js tests/release-config.test.js
+
+TAP version 13
+# Subtest: room API signals, requires dual relay consent, relays, and clears bytes
+ok 1 - room API signals, requires dual relay consent, relays, and clears bytes
+  ---
+  duration_ms: 3.140203
+  type: 'test'
+  ...
+# Subtest: concurrent relay-consent updates retain both choices @regression:durable-room-consent
+ok 2 - concurrent relay-consent updates retain both choices @regression:durable-room-consent
+  ---
+  duration_ms: 1.554202
+  type: 'test'
+  ...
+# Subtest: configured production refuses per-instance memory rooms @regression:durable-room-required
+ok 3 - configured production refuses per-instance memory rooms @regression:durable-room-required
+  ---
+  duration_ms: 0.555501
+  type: 'test'
+  ...
+# Subtest: room and relay endpoints rate limit a server-derived identity and always send Retry-After
+ok 4 - room and relay endpoints rate limit a server-derived identity and always send Retry-After
+  ---
+  duration_ms: 40.382342
+  type: 'test'
+  ...
+# Subtest: health endpoint identifies the deployed API build @claim:api-health
+ok 5 - health endpoint identifies the deployed API build @claim:api-health
+  ---
+  duration_ms: 0.675201
+  type: 'test'
+  ...
+# Subtest: rooms expire after fifteen minutes @claim:room-expiry
+ok 6 - rooms expire after fifteen minutes @claim:room-expiry
+  ---
+  duration_ms: 1.301701
+  type: 'test'
+  ...
+# Subtest: relay requires two explicit consents and enforces its byte cap @claim:relay-cap
+ok 7 - relay requires two explicit consents and enforces its byte cap @claim:relay-cap
+  ---
+  duration_ms: 0.6262
+  type: 'test'
+  ...
+# Subtest: request bursts are rate limited
+ok 8 - request bursts are rate limited
+  ---
+  duration_ms: 0.329901
+  type: 'test'
+  ...
+# Subtest: client identity never trusts caller-controlled forwarding headers
+ok 9 - client identity never trusts caller-controlled forwarding headers
+  ---
+  duration_ms: 0.2165
+  type: 'test'
+  ...
+# Subtest: hashed assets receive immutable caching and unknown paths remain 404
+ok 10 - hashed assets receive immutable caching and unknown paths remain 404
+  ---
+  duration_ms: 9.357309
+  type: 'test'
+  ...
+# Subtest: static 404 has full identity metadata and the standard navigation
+ok 11 - static 404 has full identity metadata and the standard navigation
+  ---
+  duration_ms: 2.478803
+  type: 'test'
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 158.450266
+
+> friend-file-drop@1.1.2 build
+> npm run typecheck && vite build
+
+
+> friend-file-drop@1.1.2 typecheck
+> tsc --noEmit
+
+vite v6.4.3 building for production...
+transforming...
+✓ 7 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                  1.96 kB │ gzip:  0.66 kB
+dist/assets/index-C_88kP3x.css  17.31 kB │ gzip:  4.87 kB
+dist/assets/index-CmAfhcAd.js   37.99 kB │ gzip: 12.24 kB │ map: 83.77 kB
+✓ built in 249ms
+[WebServer] (node:7508) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+(node:7526) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:7526) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [chromium] › tests/product.spec.ts:467:1 › privacy boundaries match storage and loaded resources @claim:privacy-boundaries (412ms)
+
+  1 passed (2.3s)
+PASS privacy-boundaries
+===== CLAIM individual-file-receipts =====
+
+> friend-file-drop@1.1.2 test
+> npm run test:unit && npm run build && playwright test --grep @claim:individual-file-receipts
+
+
+> friend-file-drop@1.1.2 test:unit
+> node --test api/lib/store.test.js api/integration.test.js tests/release-config.test.js
+
+TAP version 13
+# Subtest: room API signals, requires dual relay consent, relays, and clears bytes
+ok 1 - room API signals, requires dual relay consent, relays, and clears bytes
+  ---
+  duration_ms: 4.770105
+  type: 'test'
+  ...
+# Subtest: concurrent relay-consent updates retain both choices @regression:durable-room-consent
+ok 2 - concurrent relay-consent updates retain both choices @regression:durable-room-consent
+  ---
+  duration_ms: 2.436302
+  type: 'test'
+  ...
+# Subtest: configured production refuses per-instance memory rooms @regression:durable-room-required
+ok 3 - configured production refuses per-instance memory rooms @regression:durable-room-required
+  ---
+  duration_ms: 0.8252
+  type: 'test'
+  ...
+# Subtest: room and relay endpoints rate limit a server-derived identity and always send Retry-After
+ok 4 - room and relay endpoints rate limit a server-derived identity and always send Retry-After
+  ---
+  duration_ms: 9.51921
+  type: 'test'
+  ...
+# Subtest: health endpoint identifies the deployed API build @claim:api-health
+ok 5 - health endpoint identifies the deployed API build @claim:api-health
+  ---
+  duration_ms: 0.6537
+  type: 'test'
+  ...
+# Subtest: rooms expire after fifteen minutes @claim:room-expiry
+ok 6 - rooms expire after fifteen minutes @claim:room-expiry
+  ---
+  duration_ms: 1.385802
+  type: 'test'
+  ...
+# Subtest: relay requires two explicit consents and enforces its byte cap @claim:relay-cap
+ok 7 - relay requires two explicit consents and enforces its byte cap @claim:relay-cap
+  ---
+  duration_ms: 0.835
+  type: 'test'
+  ...
+# Subtest: request bursts are rate limited
+ok 8 - request bursts are rate limited
+  ---
+  duration_ms: 0.52
+  type: 'test'
+  ...
+# Subtest: client identity never trusts caller-controlled forwarding headers
+ok 9 - client identity never trusts caller-controlled forwarding headers
+  ---
+  duration_ms: 0.3309
+  type: 'test'
+  ...
+# Subtest: hashed assets receive immutable caching and unknown paths remain 404
+ok 10 - hashed assets receive immutable caching and unknown paths remain 404
+  ---
+  duration_ms: 6.330306
+  type: 'test'
+  ...
+# Subtest: static 404 has full identity metadata and the standard navigation
+ok 11 - static 404 has full identity metadata and the standard navigation
+  ---
+  duration_ms: 1.493501
+  type: 'test'
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 139.497146
+
+> friend-file-drop@1.1.2 build
+> npm run typecheck && vite build
+
+
+> friend-file-drop@1.1.2 typecheck
+> tsc --noEmit
+
+vite v6.4.3 building for production...
+transforming...
+✓ 7 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                  1.96 kB │ gzip:  0.66 kB
+dist/assets/index-C_88kP3x.css  17.31 kB │ gzip:  4.87 kB
+dist/assets/index-CmAfhcAd.js   37.99 kB │ gzip: 12.24 kB │ map: 83.77 kB
+✓ built in 248ms
+[WebServer] (node:7738) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+(node:7756) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:7756) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [chromium] › tests/product.spec.ts:391:1 › same-content files keep separate verified rows and receipts @claim:individual-file-receipts @claim:own-files-untouched (2.7s)
+
+  1 passed (4.6s)
+PASS individual-file-receipts
+===== CLAIM own-files-untouched =====
+
+> friend-file-drop@1.1.2 test
+> npm run test:unit && npm run build && playwright test --grep @claim:own-files-untouched
+
+
+> friend-file-drop@1.1.2 test:unit
+> node --test api/lib/store.test.js api/integration.test.js tests/release-config.test.js
+
+TAP version 13
+# Subtest: room API signals, requires dual relay consent, relays, and clears bytes
+ok 1 - room API signals, requires dual relay consent, relays, and clears bytes
+  ---
+  duration_ms: 3.108507
+  type: 'test'
+  ...
+# Subtest: concurrent relay-consent updates retain both choices @regression:durable-room-consent
+ok 2 - concurrent relay-consent updates retain both choices @regression:durable-room-consent
+  ---
+  duration_ms: 1.708003
+  type: 'test'
+  ...
+# Subtest: configured production refuses per-instance memory rooms @regression:durable-room-required
+ok 3 - configured production refuses per-instance memory rooms @regression:durable-room-required
+  ---
+  duration_ms: 0.546802
+  type: 'test'
+  ...
+# Subtest: room and relay endpoints rate limit a server-derived identity and always send Retry-After
+ok 4 - room and relay endpoints rate limit a server-derived identity and always send Retry-After
+  ---
+  duration_ms: 8.537619
+  type: 'test'
+  ...
+# Subtest: health endpoint identifies the deployed API build @claim:api-health
+ok 5 - health endpoint identifies the deployed API build @claim:api-health
+  ---
+  duration_ms: 0.621201
+  type: 'test'
+  ...
+# Subtest: rooms expire after fifteen minutes @claim:room-expiry
+ok 6 - rooms expire after fifteen minutes @claim:room-expiry
+  ---
+  duration_ms: 1.445703
+  type: 'test'
+  ...
+# Subtest: relay requires two explicit consents and enforces its byte cap @claim:relay-cap
+ok 7 - relay requires two explicit consents and enforces its byte cap @claim:relay-cap
+  ---
+  duration_ms: 0.838302
+  type: 'test'
+  ...
+# Subtest: request bursts are rate limited
+ok 8 - request bursts are rate limited
+  ---
+  duration_ms: 0.524401
+  type: 'test'
+  ...
+# Subtest: client identity never trusts caller-controlled forwarding headers
+ok 9 - client identity never trusts caller-controlled forwarding headers
+  ---
+  duration_ms: 0.3248
+  type: 'test'
+  ...
+# Subtest: hashed assets receive immutable caching and unknown paths remain 404
+ok 10 - hashed assets receive immutable caching and unknown paths remain 404
+  ---
+  duration_ms: 9.368521
+  type: 'test'
+  ...
+# Subtest: static 404 has full identity metadata and the standard navigation
+ok 11 - static 404 has full identity metadata and the standard navigation
+  ---
+  duration_ms: 1.773504
+  type: 'test'
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 131.087291
+
+> friend-file-drop@1.1.2 build
+> npm run typecheck && vite build
+
+
+> friend-file-drop@1.1.2 typecheck
+> tsc --noEmit
+
+vite v6.4.3 building for production...
+transforming...
+✓ 7 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                  1.96 kB │ gzip:  0.66 kB
+dist/assets/index-C_88kP3x.css  17.31 kB │ gzip:  4.87 kB
+dist/assets/index-CmAfhcAd.js   37.99 kB │ gzip: 12.24 kB │ map: 83.77 kB
+✓ built in 245ms
+[WebServer] (node:7981) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+(node:7999) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:7999) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [chromium] › tests/product.spec.ts:391:1 › same-content files keep separate verified rows and receipts @claim:individual-file-receipts @claim:own-files-untouched (2.6s)
+
+  1 passed (4.6s)
+PASS own-files-untouched
+===== CLAIM receipt-export =====
+
+> friend-file-drop@1.1.2 test
+> npm run test:unit && npm run build && playwright test --grep @claim:receipt-export
+
+
+> friend-file-drop@1.1.2 test:unit
+> node --test api/lib/store.test.js api/integration.test.js tests/release-config.test.js
+
+TAP version 13
+# Subtest: room API signals, requires dual relay consent, relays, and clears bytes
+ok 1 - room API signals, requires dual relay consent, relays, and clears bytes
+  ---
+  duration_ms: 2.979607
+  type: 'test'
+  ...
+# Subtest: concurrent relay-consent updates retain both choices @regression:durable-room-consent
+ok 2 - concurrent relay-consent updates retain both choices @regression:durable-room-consent
+  ---
+  duration_ms: 1.646203
+  type: 'test'
+  ...
+# Subtest: configured production refuses per-instance memory rooms @regression:durable-room-required
+ok 3 - configured production refuses per-instance memory rooms @regression:durable-room-required
+  ---
+  duration_ms: 0.584102
+  type: 'test'
+  ...
+# Subtest: room and relay endpoints rate limit a server-derived identity and always send Retry-After
+ok 4 - room and relay endpoints rate limit a server-derived identity and always send Retry-After
+  ---
+  duration_ms: 7.859917
+  type: 'test'
+  ...
+# Subtest: health endpoint identifies the deployed API build @claim:api-health
+ok 5 - health endpoint identifies the deployed API build @claim:api-health
+  ---
+  duration_ms: 0.563402
+  type: 'test'
+  ...
+# Subtest: rooms expire after fifteen minutes @claim:room-expiry
+ok 6 - rooms expire after fifteen minutes @claim:room-expiry
+  ---
+  duration_ms: 1.440303
+  type: 'test'
+  ...
+# Subtest: relay requires two explicit consents and enforces its byte cap @claim:relay-cap
+ok 7 - relay requires two explicit consents and enforces its byte cap @claim:relay-cap
+  ---
+  duration_ms: 0.843302
+  type: 'test'
+  ...
+# Subtest: request bursts are rate limited
+ok 8 - request bursts are rate limited
+  ---
+  duration_ms: 0.529601
+  type: 'test'
+  ...
+# Subtest: client identity never trusts caller-controlled forwarding headers
+ok 9 - client identity never trusts caller-controlled forwarding headers
+  ---
+  duration_ms: 0.340501
+  type: 'test'
+  ...
+# Subtest: hashed assets receive immutable caching and unknown paths remain 404
+ok 10 - hashed assets receive immutable caching and unknown paths remain 404
+  ---
+  duration_ms: 11.483625
+  type: 'test'
+  ...
+# Subtest: static 404 has full identity metadata and the standard navigation
+ok 11 - static 404 has full identity metadata and the standard navigation
+  ---
+  duration_ms: 1.555203
+  type: 'test'
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 156.108047
+
+> friend-file-drop@1.1.2 build
+> npm run typecheck && vite build
+
+
+> friend-file-drop@1.1.2 typecheck
+> tsc --noEmit
+
+vite v6.4.3 building for production...
+transforming...
+✓ 7 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                  1.96 kB │ gzip:  0.66 kB
+dist/assets/index-C_88kP3x.css  17.31 kB │ gzip:  4.87 kB
+dist/assets/index-CmAfhcAd.js   37.99 kB │ gzip: 12.24 kB │ map: 83.77 kB
+✓ built in 251ms
+[WebServer] (node:8242) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+(node:8260) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:8260) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [chromium] › tests/product.spec.ts:424:1 › receipt history exports and imports complete receipt records @claim:receipt-export @claim:receipt-import (663ms)
+
+  1 passed (2.6s)
+PASS receipt-export
+===== CLAIM receipt-import =====
+
+> friend-file-drop@1.1.2 test
+> npm run test:unit && npm run build && playwright test --grep @claim:receipt-import
+
+
+> friend-file-drop@1.1.2 test:unit
+> node --test api/lib/store.test.js api/integration.test.js tests/release-config.test.js
+
+TAP version 13
+# Subtest: room API signals, requires dual relay consent, relays, and clears bytes
+ok 1 - room API signals, requires dual relay consent, relays, and clears bytes
+  ---
+  duration_ms: 4.59341
+  type: 'test'
+  ...
+# Subtest: concurrent relay-consent updates retain both choices @regression:durable-room-consent
+ok 2 - concurrent relay-consent updates retain both choices @regression:durable-room-consent
+  ---
+  duration_ms: 2.436906
+  type: 'test'
+  ...
+# Subtest: configured production refuses per-instance memory rooms @regression:durable-room-required
+ok 3 - configured production refuses per-instance memory rooms @regression:durable-room-required
+  ---
+  duration_ms: 0.809902
+  type: 'test'
+  ...
+# Subtest: room and relay endpoints rate limit a server-derived identity and always send Retry-After
+ok 4 - room and relay endpoints rate limit a server-derived identity and always send Retry-After
+  ---
+  duration_ms: 10.778824
+  type: 'test'
+  ...
+# Subtest: health endpoint identifies the deployed API build @claim:api-health
+ok 5 - health endpoint identifies the deployed API build @claim:api-health
+  ---
+  duration_ms: 0.643201
+  type: 'test'
+  ...
+# Subtest: rooms expire after fifteen minutes @claim:room-expiry
+ok 6 - rooms expire after fifteen minutes @claim:room-expiry
+  ---
+  duration_ms: 1.066702
+  type: 'test'
+  ...
+# Subtest: relay requires two explicit consents and enforces its byte cap @claim:relay-cap
+ok 7 - relay requires two explicit consents and enforces its byte cap @claim:relay-cap
+  ---
+  duration_ms: 0.564701
+  type: 'test'
+  ...
+# Subtest: request bursts are rate limited
+ok 8 - request bursts are rate limited
+  ---
+  duration_ms: 0.3314
+  type: 'test'
+  ...
+# Subtest: client identity never trusts caller-controlled forwarding headers
+ok 9 - client identity never trusts caller-controlled forwarding headers
+  ---
+  duration_ms: 0.212301
+  type: 'test'
+  ...
+# Subtest: hashed assets receive immutable caching and unknown paths remain 404
+ok 10 - hashed assets receive immutable caching and unknown paths remain 404
+  ---
+  duration_ms: 8.661119
+  type: 'test'
+  ...
+# Subtest: static 404 has full identity metadata and the standard navigation
+ok 11 - static 404 has full identity metadata and the standard navigation
+  ---
+  duration_ms: 2.258405
+  type: 'test'
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 155.762046
+
+> friend-file-drop@1.1.2 build
+> npm run typecheck && vite build
+
+
+> friend-file-drop@1.1.2 typecheck
+> tsc --noEmit
+
+vite v6.4.3 building for production...
+transforming...
+✓ 7 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                  1.96 kB │ gzip:  0.66 kB
+dist/assets/index-C_88kP3x.css  17.31 kB │ gzip:  4.87 kB
+dist/assets/index-CmAfhcAd.js   37.99 kB │ gzip: 12.24 kB │ map: 83.77 kB
+✓ built in 245ms
+[WebServer] (node:8469) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+(node:8487) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:8487) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [chromium] › tests/product.spec.ts:424:1 › receipt history exports and imports complete receipt records @claim:receipt-export @claim:receipt-import (685ms)
+
+  1 passed (2.6s)
+PASS receipt-import
+===== CLAIM demo-no-real-files =====
+
+> friend-file-drop@1.1.2 test
+> npm run test:unit && npm run build && playwright test --grep @claim:demo-no-real-files
+
+
+> friend-file-drop@1.1.2 test:unit
+> node --test api/lib/store.test.js api/integration.test.js tests/release-config.test.js
+
+TAP version 13
+# Subtest: room API signals, requires dual relay consent, relays, and clears bytes
+ok 1 - room API signals, requires dual relay consent, relays, and clears bytes
+  ---
+  duration_ms: 4.63781
+  type: 'test'
+  ...
+# Subtest: concurrent relay-consent updates retain both choices @regression:durable-room-consent
+ok 2 - concurrent relay-consent updates retain both choices @regression:durable-room-consent
+  ---
+  duration_ms: 2.403606
+  type: 'test'
+  ...
+# Subtest: configured production refuses per-instance memory rooms @regression:durable-room-required
+ok 3 - configured production refuses per-instance memory rooms @regression:durable-room-required
+  ---
+  duration_ms: 0.878402
+  type: 'test'
+  ...
+# Subtest: room and relay endpoints rate limit a server-derived identity and always send Retry-After
+ok 4 - room and relay endpoints rate limit a server-derived identity and always send Retry-After
+  ---
+  duration_ms: 33.651075
+  type: 'test'
+  ...
+# Subtest: health endpoint identifies the deployed API build @claim:api-health
+ok 5 - health endpoint identifies the deployed API build @claim:api-health
+  ---
+  duration_ms: 0.707001
+  type: 'test'
+  ...
+# Subtest: rooms expire after fifteen minutes @claim:room-expiry
+ok 6 - rooms expire after fifteen minutes @claim:room-expiry
+  ---
+  duration_ms: 0.981302
+  type: 'test'
+  ...
+# Subtest: relay requires two explicit consents and enforces its byte cap @claim:relay-cap
+ok 7 - relay requires two explicit consents and enforces its byte cap @claim:relay-cap
+  ---
+  duration_ms: 0.651602
+  type: 'test'
+  ...
+# Subtest: request bursts are rate limited
+ok 8 - request bursts are rate limited
+  ---
+  duration_ms: 0.3386
+  type: 'test'
+  ...
+# Subtest: client identity never trusts caller-controlled forwarding headers
+ok 9 - client identity never trusts caller-controlled forwarding headers
+  ---
+  duration_ms: 0.2175
+  type: 'test'
+  ...
+# Subtest: hashed assets receive immutable caching and unknown paths remain 404
+ok 10 - hashed assets receive immutable caching and unknown paths remain 404
+  ---
+  duration_ms: 8.608119
+  type: 'test'
+  ...
+# Subtest: static 404 has full identity metadata and the standard navigation
+ok 11 - static 404 has full identity metadata and the standard navigation
+  ---
+  duration_ms: 2.191105
+  type: 'test'
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 156.558847
+
+> friend-file-drop@1.1.2 build
+> npm run typecheck && vite build
+
+
+> friend-file-drop@1.1.2 typecheck
+> tsc --noEmit
+
+vite v6.4.3 building for production...
+transforming...
+✓ 7 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                  1.96 kB │ gzip:  0.66 kB
+dist/assets/index-C_88kP3x.css  17.31 kB │ gzip:  4.87 kB
+dist/assets/index-CmAfhcAd.js   37.99 kB │ gzip: 12.24 kB │ map: 83.77 kB
+✓ built in 261ms
+[WebServer] (node:8696) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+(node:8714) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:8714) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [chromium] › tests/product.spec.ts:210:1 › demo stays isolated and leaving clears its session @claim:demo-isolation @claim:demo-no-real-files @regression:demo-exit-clears (1.6s)
+
+  1 passed (3.4s)
+PASS demo-no-real-files
+===== CLAIM room-code-storage =====
+
+> friend-file-drop@1.1.2 test
+> npm run test:unit && npm run build && playwright test --grep @claim:room-code-storage
+
+
+> friend-file-drop@1.1.2 test:unit
+> node --test api/lib/store.test.js api/integration.test.js tests/release-config.test.js
+
+TAP version 13
+# Subtest: room API signals, requires dual relay consent, relays, and clears bytes
+ok 1 - room API signals, requires dual relay consent, relays, and clears bytes
+  ---
+  duration_ms: 5.766213
+  type: 'test'
+  ...
+# Subtest: concurrent relay-consent updates retain both choices @regression:durable-room-consent
+ok 2 - concurrent relay-consent updates retain both choices @regression:durable-room-consent
+  ---
+  duration_ms: 1.663904
+  type: 'test'
+  ...
+# Subtest: configured production refuses per-instance memory rooms @regression:durable-room-required
+ok 3 - configured production refuses per-instance memory rooms @regression:durable-room-required
+  ---
+  duration_ms: 0.566601
+  type: 'test'
+  ...
+# Subtest: room and relay endpoints rate limit a server-derived identity and always send Retry-After
+ok 4 - room and relay endpoints rate limit a server-derived identity and always send Retry-After
+  ---
+  duration_ms: 10.413723
+  type: 'test'
+  ...
+# Subtest: health endpoint identifies the deployed API build @claim:api-health
+ok 5 - health endpoint identifies the deployed API build @claim:api-health
+  ---
+  duration_ms: 0.661001
+  type: 'test'
+  ...
+# Subtest: rooms expire after fifteen minutes @claim:room-expiry
+ok 6 - rooms expire after fifteen minutes @claim:room-expiry
+  ---
+  duration_ms: 1.067702
+  type: 'test'
+  ...
+# Subtest: relay requires two explicit consents and enforces its byte cap @claim:relay-cap
+ok 7 - relay requires two explicit consents and enforces its byte cap @claim:relay-cap
+  ---
+  duration_ms: 0.565801
+  type: 'test'
+  ...
+# Subtest: request bursts are rate limited
+ok 8 - request bursts are rate limited
+  ---
+  duration_ms: 0.330101
+  type: 'test'
+  ...
+# Subtest: client identity never trusts caller-controlled forwarding headers
+ok 9 - client identity never trusts caller-controlled forwarding headers
+  ---
+  duration_ms: 0.2151
+  type: 'test'
+  ...
+# Subtest: hashed assets receive immutable caching and unknown paths remain 404
+ok 10 - hashed assets receive immutable caching and unknown paths remain 404
+  ---
+  duration_ms: 7.478516
+  type: 'test'
+  ...
+# Subtest: static 404 has full identity metadata and the standard navigation
+ok 11 - static 404 has full identity metadata and the standard navigation
+  ---
+  duration_ms: 2.467506
+  type: 'test'
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 162.726761
+
+> friend-file-drop@1.1.2 build
+> npm run typecheck && vite build
+
+
+> friend-file-drop@1.1.2 typecheck
+> tsc --noEmit
+
+vite v6.4.3 building for production...
+transforming...
+✓ 7 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                  1.96 kB │ gzip:  0.66 kB
+dist/assets/index-C_88kP3x.css  17.31 kB │ gzip:  4.87 kB
+dist/assets/index-CmAfhcAd.js   37.99 kB │ gzip: 12.24 kB │ map: 83.77 kB
+✓ built in 243ms
+[WebServer] (node:8944) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+(node:8962) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:8962) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [chromium] › tests/product.spec.ts:453:1 › the saved room code is visible, documented, and removable @claim:room-code-storage (1.2s)
+
+  1 passed (3.2s)
+PASS room-code-storage
+===== CLAIM api-health =====
+TAP version 13
+# Subtest: health endpoint identifies the deployed API build @claim:api-health
+ok 1 - health endpoint identifies the deployed API build @claim:api-health
+  ---
+  duration_ms: 0.977502
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 82.458183
+PASS api-health
+CLAIMS_RESULT 21/21
