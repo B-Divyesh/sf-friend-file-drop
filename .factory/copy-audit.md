@@ -101,6 +101,14 @@ Audited 2026-08-29 against the `plain-words` rules. Hyphenated terms and numbers
 | You can also clear it from the transfer sheet or by clearing site data. | 14 |
 | The installed app opens offline after the first visit. | 9 |
 | Sending files requires a network and another browser. | 8 |
+| After committing and pushing main, run scripts/deploy-static.sh. | 7 |
+| It builds dist and deploys the site and managed API. | 10 |
+| It sets FRIEND_FILE_DROP_SOURCE_REVISION to the full deployed commit SHA. | 9 |
+| The deployment fails unless live api/health reports that exact SHA. | 10 |
+| public/staticwebapp.config.json defines the SPA routes, styled 404, security headers, and immutable asset caching. | 13 |
+| Health also reports the managed deployment identity. | 7 |
+| It reports unavailable when either identity value is missing. | 9 |
+| DNS and billing stay outside this repository. | 7 |
 
 ## Terminology
 
