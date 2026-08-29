@@ -1,0 +1,66 @@
+{
+  "home": {
+    "title": "Friend File Drop — send files browser to browser",
+    "h1": "Send files straight to someone you trust",
+    "primaryVisible": true,
+    "horizontalOverflow": 0
+  },
+  "demo": {
+    "url": "https://friend-file-drop.sociobot.in/?demo=1",
+    "title": "Demo — Friend File Drop",
+    "banner": true,
+    "rows": [
+      {
+        "text": "picnic-table.jpg2.3 MB · SHA-2567d6937b9d57b343a82c930f195567f9eb64e16ef52fe32d926e5130fb37376c1Waiting",
+        "hash": "7d6937b9d57b343a82c930f195567f9eb64e16ef52fe32d926e5130fb37376c1"
+      },
+      {
+        "text": "family-recipes.pdf840.0 KB · SHA-25662fdfe29e7c9fba645a4a943c8e6d7fca73f43c1f228288d0c844991afa88497Waiting",
+        "hash": "62fdfe29e7c9fba645a4a943c8e6d7fca73f43c1f228288d0c844991afa88497"
+      },
+      {
+        "text": "read-me-first.txt1.2 KB · SHA-256b47b67ef28ed857e3aee9f8c43c129e95d1a956f53cb696637d290f0dc554ee2Waiting",
+        "hash": "b47b67ef28ed857e3aee9f8c43c129e95d1a956f53cb696637d290f0dc554ee2"
+      }
+    ],
+    "fileInputs": 0,
+    "apiRequests": [],
+    "foreignRequests": []
+  },
+  "reset": {
+    "receiptHeadings": 0,
+    "demoKeys": []
+  },
+  "exit": {
+    "url": "https://friend-file-drop.sociobot.in/",
+    "demoKeys": []
+  },
+  "notFound": {
+    "status": 404,
+    "title": "Page not found — Friend File Drop",
+    "h1": "This notebook page is missing",
+    "canonical": "https://friend-file-drop.sociobot.in/404",
+    "howLinks": 1,
+    "privacyLinks": 2,
+    "termsLinks": 1
+  },
+  "routes": {
+    "/": 200,
+    "/demo": 200,
+    "/privacy": 200,
+    "/terms": 200,
+    "/missing-page": 404,
+    "/robots.txt": 200,
+    "/sitemap.xml": 200,
+    "/manifest.webmanifest": 200,
+    "/assets/social-preview.webp": 200
+  },
+  "headers": {
+    "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'",
+    "x-content-type-options": "nosniff",
+    "referrer-policy": "no-referrer",
+    "permissions-policy": "camera=(), microphone=(), geolocation=(), payment=()",
+    "cache-control": "no-cache"
+  },
+  "errors": []
+}

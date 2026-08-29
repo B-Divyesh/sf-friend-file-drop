@@ -1,26 +1,43 @@
-# Friend File Drop review 2 handoff
+# Friend File Drop polish 2 handoff
 
-## Outcome: **FAIL**
+## Outcome: PASS
 
-- Reviewed: 2026-08-29 UTC
+Friend File Drop 1.1.4 closes all findings from adversarial reviews 1 and 2. The released PWA remains a static, offline-capable browser transfer tool with its original lab-notebook visual identity.
+
+## What changed
+
+- Registered the one-click ready-demo promise as `demo-ready-in-one-click`.
+- Added an exact claim test for the query route, banner, three sample names, sizes, full hashes, and zero visitor-file/API use.
+- Rewrote the remaining README and privacy storage text in plain outcome language.
+- Added release gates for unique one-to-one claim tags, catalog copy, and rejected review wording.
+- Updated the catalog line to: “Send files between devices and keep a matching receipt.”
+- Bumped the product/API/footer/service-worker release to 1.1.4.
+
+The full finding-to-change-to-evidence map is in [`.factory/polish-2.md`](polish-2.md).
+
+## Verification
+
+- Fresh clone: `npm ci` passed; all 22 `.factory/claims.json` commands passed independently.
+- `npm test`: 19 Node tests and 29 local Chromium tests passed.
+- `npm run lint`: passed.
+- `npm run build`: passed and produced `dist/index.html`.
+- Bundle: 13.09 KB JavaScript gzip and 4.87 KB CSS gzip.
+- Local and live URL verifier: correct title, `lang`, one `h1`, main landmark, image alt text, labelled controls, and zero console errors.
+- Axe: no serious or critical violations on all product routes and the deployed 404.
+- Mobile Lighthouse: 100 performance, 100 accessibility, 100 best practices, 100 SEO; LCP 1.3 s; CLS 0; TBT 0 ms.
+- Live suite: 10/10 passed for exact API identity, metadata/routes/404, accessibility, ready-demo isolation, offline reload, direct transfer recovery, and durable dual-consent relay.
+- Cold live check: no horizontal overflow at 390 px; demo reset and exit clear the isolated namespace; no demo API or third-party requests.
+
+Run locally with `npm ci && npm run dev`. Verify with `npm test`, `npm run lint`, and `npm run build`. Run the deployment-only suite with `LIVE_URL=https://friend-file-drop.sociobot.in EXPECTED_SOURCE_REVISION=$(git rev-parse HEAD) npx playwright test tests/live.spec.ts`.
+
+## Deployment
+
 - Live URL: <https://friend-file-drop.sociobot.in>
-- Product code changed: no
-- Review: [`.factory/review-2.md`](review-2.md)
+- Verified repair revision: `f722d71a152c20fd49eaf578d4fca697b40c7355`
+- Static deployment: `e1409975-775c-4ab4-9e50-40596f6ee6f7`
+- Managed API identity: `b0be2e90-7d4f-42f7-993b-c65e09fa07d0`
+- Deployment command: `scripts/deploy-static.sh`
 
-The product works in the reviewed flows, but it is not accepted because the review found two blocking documentation/claims-contract defects and one minor plain-language defect.
+## Known gaps and next steps
 
-## What was verified
-
-- Fresh `npm ci`, all 21 declared claim commands individually, `npm test`, `npm run lint`, and `npm run build` passed.
-- The live Playwright suite passed 10/10 with source revision `48e2f5585085a14242224553e90179c0ff80d962`.
-- Cold desktop and 390 px mobile first reads were clear; no cold-load console errors or mobile horizontal overflow appeared.
-- The one-click demo showed three realistic sample files, banner, reset, start-for-real exit, verified receipt, same-origin-only requests, no API request, and isolated `demo:` session state.
-- Routes, deep links, designed 404, metadata, internal links, accessibility checks, privacy/resource checks, offline reload, direct transfer, and dual-consent relay were checked.
-
-## Known gaps / next steps
-
-1. **Blocking F-2-1:** register and test the landing/README promise that one click opens an already-populated sample transfer.
-2. **Blocking F-2-2 / prior F-1-4:** replace README “saved offset” with plain language that says the transfer continues where it stopped.
-3. **Minor F-2-3:** replace undefined “verified pieces” and implementation-led “session-storage keys” with consistent outcome language.
-
-After those changes, rerun the full fresh-install claim list and live suite. No deployment, DNS, billing, or product-code changes were made in this review.
+None within the product contract or cumulative review scope. No finding of any severity remains unresolved.
