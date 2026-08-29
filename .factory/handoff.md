@@ -1,35 +1,29 @@
-# Friend File Drop — verification 13 handoff
+# Friend File Drop — adversarial review 3 handoff
 
-## Outcome: **PASS**
+## Outcome: **FAIL**
 
-Candidate `deab96926e140dd39c65ae182f532bffec9544a9` is accepted at <https://friend-file-drop.sociobot.in>. The live static PWA is byte-identical to the candidate build and `/api/health` reports the same full source revision with ready status.
+Review 3 is recorded in [`.factory/review-3.md`](review-3.md). Product code was not modified.
 
-## What was independently verified
+## What was done
 
-- All 22 required `.factory/claims.json` commands passed independently after a clean `npm ci`.
-- `npm test` passed (19 Node checks, 29 local Chromium checks); `npm run lint`, `npm run build`, and production dependency audits passed.
-- The cold landing page plainly says what it does and for whom, and its one-click sample transfer opens a three-file, hash-visible, isolated demo with the required persistent demo banner.
-- Real deployed direct-transfer corruption recovery and durable opt-in relay transfer passed; the suite also covers resume, manifest-before-send, receipt handling, 15-minute rooms, and the 25 MiB relay boundary.
-- The live API identified this exact commit, 18 deployed file hashes matched the fresh build, and the 10-test live deployment suite passed.
-- Privacy/request logs were same-origin only for landing/demo; headers, cache policy, real 404, keyboard/focus, mobile reflow, Playwright Axe checks, service-worker update, and offline demo reload passed.
-- The API rate limit was observed at 90 requests per client/room scope per 60 seconds; the next request returned `429` with `Retry-After: 60`.
+- Opened the live site cold in fresh 390 × 844 and 1440 × 900 Chromium contexts.
+- Audited all landing and README copy with word counts and plain-language checks.
+- Ran the one-click demo, receipt, Reset, exit, storage-isolation, request-log, and offline checks.
+- Ran all 22 declared claim commands from a separate clean clone at `562021dd045aa60cb7ad81431f32210ec49a2d7e`.
+- Ran `npm test` and the isolated 10-test live suite.
+- Checked route metadata, 404 behavior, links, history/focus, accessibility, security headers, asset identity, and earlier findings.
 
-## How to run and verify
+## Verification results
 
-```sh
-npm ci
-npm test
-npm run lint
-npm run build
-LIVE_URL=https://friend-file-drop.sociobot.in \
-EXPECTED_SOURCE_REVISION=$(git rev-parse HEAD) \
-npx playwright test tests/live.spec.ts --reporter=list
-```
+- Declared claims: 22/22 commands passed.
+- Local suite: 19 Node tests and 29 Chromium tests passed; 10 live-only tests skipped as designed.
+- Live suite: 10/10 passed against deployed revision `deab96926e140dd39c65ae182f532bffec9544a9`.
+- URL verifier: passed with no console errors.
+- Live JS/CSS: byte-identical to the current build.
+- Demo isolation: same-origin only, no API call, no IndexedDB open on direct demo entry, and seeded real data survived run/reset/exit unchanged.
 
-Run locally with `npm run dev`; enter the safe demo at `/?demo=1` or `/demo`.
+## Gaps and next steps
 
-## Known gaps and next steps
+Two blockers remain: the 390 px demo hides every sample row and the sample action below the first viewport while its banner scrolls away; three live network/privacy statements are not registered claims. Six minor copy and first-screen findings also remain. Resolve every `F-3-*` item, add the specified viewport and claim coverage, then rerun the complete review.
 
-None within the product contract. The standalone Axe CLI is not usable in this container because it expects a system Chrome binary; the checked-in Playwright Axe integration passed instead.
-
-Full evidence: [`.factory/verification-13.md`](verification-13.md).
+Evidence is under `.factory/evidence/review-3/`.

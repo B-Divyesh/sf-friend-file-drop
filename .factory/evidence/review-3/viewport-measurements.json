@@ -1,0 +1,71 @@
+{
+  "home_mobile": {
+    "viewport": 844,
+    "facts": [
+      {
+        "text": "No account or app",
+        "top": 718.453125,
+        "bottom": 742.421875,
+        "inViewport": true
+      },
+      {
+        "text": "Files go direct when browsers connect",
+        "top": 750.0625,
+        "bottom": 798,
+        "inViewport": true
+      },
+      {
+        "text": "Free to use",
+        "top": 805.640625,
+        "bottom": 829.609375,
+        "inViewport": true
+      }
+    ]
+  },
+  "home_desktop": {
+    "viewport": 900,
+    "facts": [
+      {
+        "text": "No account or app",
+        "top": 913.5625,
+        "bottom": 937.53125,
+        "inViewport": false
+      },
+      {
+        "text": "Files go direct when browsers connect",
+        "top": 944.328125,
+        "bottom": 968.296875,
+        "inViewport": false
+      },
+      {
+        "text": "Free to use",
+        "top": 944.328125,
+        "bottom": 968.296875,
+        "inViewport": false
+      }
+    ]
+  },
+  "demo_mobile": {
+    "viewport": 844,
+    "firstRow": {
+      "top": 905.75,
+      "bottom": 1054.1875,
+      "inViewport": false
+    },
+    "runButton": {
+      "top": 1376.5625,
+      "bottom": 1431.375,
+      "inViewport": false
+    },
+    "bannerBefore": {
+      "top": 0,
+      "bottom": 87.34375
+    },
+    "bannerAfterScroll": {
+      "scrollY": 962,
+      "top": -962,
+      "bottom": -874.65625,
+      "inViewport": false
+    }
+  }
+}

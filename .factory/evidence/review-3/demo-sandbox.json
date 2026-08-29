@@ -1,0 +1,82 @@
+{
+  "immediate": {
+    "url": "https://friend-file-drop.sociobot.in/?demo=1",
+    "banner": true,
+    "reset": true,
+    "exit": true,
+    "names": [
+      "picnic-table.jpg",
+      "family-recipes.pdf",
+      "read-me-first.txt"
+    ],
+    "sizes": [
+      "",
+      "2.3 MB · SHA-256",
+      "",
+      "840.0 KB · SHA-256",
+      "",
+      "1.2 KB · SHA-256"
+    ],
+    "hashes": [
+      "7d6937b9d57b343a82c930f195567f9eb64e16ef52fe32d926e5130fb37376c1",
+      "62fdfe29e7c9fba645a4a943c8e6d7fca73f43c1f228288d0c844991afa88497",
+      "b47b67ef28ed857e3aee9f8c43c129e95d1a956f53cb696637d290f0dc554ee2"
+    ],
+    "fileInputs": 0,
+    "screenText": "ONE-CLICK PRACTICE TRANSFER\n\nSend sample files and check the receipt\n\nThree sample files are ready. Run the transfer without using your files.\n\nROOM CODE\nmaple-river-coral-finch-paper-moon\nSample manifest\n\nFrom Mina's phone · Saturday picnic\n\npicnic-table.jpg\n2.3 MB · SHA-256\n7d6937b9d57b343a82c930f195567f9eb64e16ef52fe32d926e5130fb37376c1\nWaiting\nfamily-recipes.pdf\n840.0 KB · SHA-256\n62fdfe29e7c9fba645a4a943c8e6d7fca73f43c1f228288d0c844991afa88497\nWaiting\nread-me-first.txt\n1.2 KB · SHA-256\nb47b67ef28ed857e3aee9f8c43c129e95d1a956f53cb696637d290f0dc554ee2\nWaiting\nSend sample files\n\nReady. No network or real files are used."
+  },
+  "afterRun": {
+    "session": {
+      "demo:completed": "{\"id\":\"demo-receipt-001\",\"roomCode\":\"maple-river-coral-finch-paper-moon\",\"completedAt\":\"2026-08-29T13:48:17.135Z\",\"direction\":\"sent\",\"files\":[{\"name\":\"picnic-table.jpg\",\"size\":2457600,\"hash\":\"7d6937b9d57b343a82c930f195567f9eb64e16ef52fe32d926e5130fb37376c1\"},{\"name\":\"family-recipes.pdf\",\"size\":860160,\"hash\":\"62fdfe29e7c9fba645a4a943c8e6d7fca73f43c1f228288d0c844991afa88497\"},{\"name\":\"read-me-first.txt\",\"size\":1228,\"hash\":\"b47b67ef28ed857e3aee9f8c43c129e95d1a956f53cb696637d290f0dc554ee2\"}]}"
+    },
+    "local": {
+      "review:sentinel": "keep-me",
+      "friend-file-drop:last-room": "amber-apple-atlas-birch-blue-brisk"
+    },
+    "receiptRows": 3
+  },
+  "afterReset": {
+    "session": {},
+    "local": {
+      "review:sentinel": "keep-me",
+      "friend-file-drop:last-room": "amber-apple-atlas-birch-blue-brisk"
+    },
+    "finishedCount": 0,
+    "sampleRows": 3
+  },
+  "afterExit": {
+    "url": "https://friend-file-drop.sociobot.in/",
+    "session": {},
+    "local": {
+      "review:sentinel": "keep-me",
+      "friend-file-drop:last-room": "amber-apple-atlas-birch-blue-brisk"
+    },
+    "historyText": "1 saved receipt on this device\nSent 1 file\n8/29/2026, 12:00:00 AM · amber-apple-atlas-birch-blue-brisk\nExport saved receipts\nImport receipts",
+    "realReceipt": {
+      "id": "review-real-receipt",
+      "roomCode": "amber-apple-atlas-birch-blue-brisk",
+      "completedAt": "2026-08-29T00:00:00.000Z",
+      "direction": "sent",
+      "files": [
+        {
+          "name": "real-private.txt",
+          "size": 7,
+          "hash": "real-hash"
+        }
+      ]
+    }
+  },
+  "directDemoIdbOpens": 0,
+  "requests": [
+    "https://friend-file-drop.sociobot.in/",
+    "https://friend-file-drop.sociobot.in/assets/index-r-R4N5KH.js",
+    "https://friend-file-drop.sociobot.in/assets/index-C_88kP3x.css",
+    "https://friend-file-drop.sociobot.in/assets/notebook-transfer.webp",
+    "https://friend-file-drop.sociobot.in/assets/notebook-transfer.webp"
+  ],
+  "origins": [
+    "https://friend-file-drop.sociobot.in"
+  ],
+  "apiRequests": [],
+  "consoleErrors": []
+}

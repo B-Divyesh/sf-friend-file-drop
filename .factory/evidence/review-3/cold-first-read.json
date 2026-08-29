@@ -1,0 +1,209 @@
+[
+  {
+    "name": "mobile",
+    "width": 390,
+    "height": 844,
+    "isMobile": true,
+    "deviceScaleFactor": 1,
+    "status": 200,
+    "url": "https://friend-file-drop.sociobot.in/",
+    "consoleErrors": [],
+    "pageErrors": [],
+    "requests": [
+      "https://friend-file-drop.sociobot.in/",
+      "https://friend-file-drop.sociobot.in/assets/index-r-R4N5KH.js",
+      "https://friend-file-drop.sociobot.in/assets/index-C_88kP3x.css",
+      "https://friend-file-drop.sociobot.in/assets/notebook-transfer.webp"
+    ],
+    "data": {
+      "title": "Friend File Drop — send files browser to browser",
+      "h1": [
+        "Send files straight to someone you trust"
+      ],
+      "scrollY": 0,
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "bodyHeight": 3784,
+      "visible": [
+        {
+          "tag": "a",
+          "text": "F→FFriend File Drop",
+          "top": 17,
+          "bottom": 61
+        },
+        {
+          "tag": "a",
+          "text": "Demo",
+          "top": 71,
+          "bottom": 115
+        },
+        {
+          "tag": "a",
+          "text": "Privacy",
+          "top": 71,
+          "bottom": 115
+        },
+        {
+          "tag": "p",
+          "text": "Browser-to-browser file transfer",
+          "top": 184,
+          "bottom": 199
+        },
+        {
+          "tag": "h1",
+          "text": "Send files straight to someone you trust",
+          "top": 210,
+          "bottom": 380
+        },
+        {
+          "tag": "p",
+          "text": "For friends on different devices who need the files and proof that they arrived.",
+          "top": 397,
+          "bottom": 482
+        },
+        {
+          "tag": "a",
+          "text": "Try it with sample data",
+          "top": 512,
+          "bottom": 567
+        },
+        {
+          "tag": "a",
+          "text": "Choose your files",
+          "top": 580,
+          "bottom": 635
+        },
+        {
+          "tag": "p",
+          "text": "The demo opens a ready transfer. Your own files stay untouched.",
+          "top": 647,
+          "bottom": 695
+        },
+        {
+          "tag": "li",
+          "text": "No account or app",
+          "top": 718,
+          "bottom": 742
+        },
+        {
+          "tag": "li",
+          "text": "Files go direct when browsers connect",
+          "top": 750,
+          "bottom": 798
+        },
+        {
+          "tag": "li",
+          "text": "Free to use",
+          "top": 806,
+          "bottom": 830
+        }
+      ],
+      "primary": {
+        "text": "Try it with sample data",
+        "top": 512,
+        "bottom": 567,
+        "fullyVisible": true
+      }
+    }
+  },
+  {
+    "name": "desktop",
+    "width": 1440,
+    "height": 900,
+    "deviceScaleFactor": 1,
+    "status": 200,
+    "url": "https://friend-file-drop.sociobot.in/",
+    "consoleErrors": [],
+    "pageErrors": [],
+    "requests": [
+      "https://friend-file-drop.sociobot.in/",
+      "https://friend-file-drop.sociobot.in/assets/index-r-R4N5KH.js",
+      "https://friend-file-drop.sociobot.in/assets/index-C_88kP3x.css",
+      "https://friend-file-drop.sociobot.in/assets/notebook-transfer.webp"
+    ],
+    "data": {
+      "title": "Friend File Drop — send files browser to browser",
+      "h1": [
+        "Send files straight to someone you trust"
+      ],
+      "scrollY": 0,
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "bodyHeight": 3178,
+      "visible": [
+        {
+          "tag": "a",
+          "text": "F→FFriend File Drop",
+          "top": 17,
+          "bottom": 61
+        },
+        {
+          "tag": "a",
+          "text": "Demo",
+          "top": 17,
+          "bottom": 61
+        },
+        {
+          "tag": "a",
+          "text": "How it works",
+          "top": 17,
+          "bottom": 61
+        },
+        {
+          "tag": "a",
+          "text": "Privacy",
+          "top": 17,
+          "bottom": 61
+        },
+        {
+          "tag": "p",
+          "text": "Browser-to-browser file transfer",
+          "top": 209,
+          "bottom": 224
+        },
+        {
+          "tag": "h1",
+          "text": "Send files straight to someone you trust",
+          "top": 234,
+          "bottom": 661
+        },
+        {
+          "tag": "p",
+          "text": "For friends on different devices who need the files and proof that they arrived.",
+          "top": 678,
+          "bottom": 745
+        },
+        {
+          "tag": "a",
+          "text": "Try it with sample data",
+          "top": 775,
+          "bottom": 830
+        },
+        {
+          "tag": "a",
+          "text": "Choose your files",
+          "top": 775,
+          "bottom": 830
+        },
+        {
+          "tag": "p",
+          "text": "The demo opens a ready transfer. Your own files stay untouched.",
+          "top": 842,
+          "bottom": 890
+        },
+        {
+          "tag": "figcaption",
+          "text": "Each selected file has a receipt. Both sides get the same receipt.",
+          "top": 742,
+          "bottom": 796
+        }
+      ],
+      "primary": {
+        "text": "Try it with sample data",
+        "top": 775,
+        "bottom": 830,
+        "fullyVisible": true
+      }
+    }
+  }
+]
