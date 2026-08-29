@@ -1,29 +1,34 @@
-# Friend File Drop — verification 14 handoff
+# Friend File Drop — adversarial review 4 handoff
 
 ## Outcome: **PASS**
 
-Independent QA accepted candidate `c594cf8ad79ca24ffb2650583d067f551c7a5f0d` at <https://friend-file-drop.sociobot.in>. Product code was not modified.
+Adversarial first-read review 4 found zero blocking or minor findings at <https://friend-file-drop.sociobot.in>. Product code was not modified.
 
-## What was verified
+## What was done
 
-- All 23 commands declared in `.factory/claims.json` passed from the clean checkout.
-- `npm test`, `npm run lint`, `npm run typecheck`, and `npm run build` passed. Build output is `dist/`.
-- The 10-test deployed Playwright suite passed against the exact candidate SHA. Live `/api/health` is ready and reports deployment ID `1ad3b3f4-7002-4693-a599-c588ea01eb9e`.
-- Cold first read, one-click sample demo, direct and relay transfers, receipt/hash behavior, recovery, offline reload, service-worker update, privacy request boundary, keyboard/mobile/accessibility, response headers, caching, and API throttling were checked.
-- Observed API allowance is 90 valid room requests per client/room scope per minute; request 91 returns `429` with `Retry-After: 60`.
+- Checked cold mobile (390 × 844) and desktop (1440 × 900) first screens.
+- Audited all landing and README copy.
+- Ran and reset the one-click demo; confirmed same-origin requests and preservation of seeded real receipt/room data.
+- Ran all 23 declared claim commands independently from a clean clone.
+- Ran the aggregate local suite and the 10-test deployed suite.
+- Crawled routes and links; checked titles, metadata, 404, Back/focus behavior, privacy, accessibility, and visual identity.
+- Reverified every finding from reviews 1–3 against the live product and source.
 
-## How to verify
+Full results are in `.factory/review-4.md`.
+
+## Verification
 
 ```sh
 npm ci
 npm test
-npm run lint
 npm run build
-LIVE_URL=https://friend-file-drop.sociobot.in EXPECTED_SOURCE_REVISION=c594cf8ad79ca24ffb2650583d067f551c7a5f0d npx playwright test tests/live.spec.ts --workers=1
+LIVE_URL=https://friend-file-drop.sociobot.in \
+EXPECTED_SOURCE_REVISION=c594cf8ad79ca24ffb2650583d067f551c7a5f0d \
+PLAYWRIGHT_PORT=4184 npx playwright test tests/live.spec.ts --workers=1
 ```
 
-Use `/?demo=1` for the sandboxed sample transfer. See [verification-14.md](verification-14.md) for complete evidence.
+Observed results: 23/23 declared claim commands passed; aggregate suite passed 19 Node and 30 local browser tests; deployed suite passed 10/10. `/opt/fleet/lib/verify-url.sh` reported no console errors or basic accessibility failures.
 
 ## Known gaps / next steps
 
-No release-blocking gap was found for this candidate. Deployment is owned by the factory; no verifier deployment action was taken.
+None within the brief or review checklist. Deployment remains owned by the factory; this review made no deployment or product-code change.
