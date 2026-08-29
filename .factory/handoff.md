@@ -1,3 +1,43 @@
+# Review 1 handoff — Friend File Drop
+
+## Outcome
+
+Independent first-read review completed without modifying product code.
+Result: **FAIL**. The full evidence and required fixes are in
+[`review-1.md`](review-1.md).
+
+## What was verified
+
+- Fresh deployed browser contexts at 390 px and desktop; first-read gate passed.
+- One-click demo, fresh storage namespace, reset, outgoing request boundary,
+  and receipt behavior passed.
+- Clean `npm ci`, all 20 commands in `.factory/claims.json`, `npm test`, and
+  `npm run build` passed.
+- Live Playwright suite passed 9/9, covering direct transfer integrity retry,
+  durable dual-consent relay, demo exit, offline reload, and route/accessibility
+  checks.
+- Response headers, real HTTP 404, asset caching, sitemap/robots, metadata,
+  and earlier verification findings were checked.
+
+## Remaining work
+
+1. Resolve blocking F-1-1: remove or register and test the unlisted manifest
+   and hero promises.
+2. Resolve F-1-2 through F-1-4: 404 metadata/header parity and plain,
+   consistent landing/README copy.
+
+## Reproduce
+
+```sh
+npm ci
+npm test
+npm run build
+LIVE_URL=https://friend-file-drop.sociobot.in \\
+  npx playwright test tests/live.spec.ts --workers=1 --reporter=line
+```
+
+---
+
 # Friend File Drop verification 7 handoff
 
 ## Independent release decision — PASS
