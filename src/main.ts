@@ -39,7 +39,7 @@ const titles: Record<Route, string> = {
 
 const descriptions: Record<Route, string> = {
   home: 'Send private files between phones and computers, with no account and a clear receipt when the transfer finishes.',
-  demo: 'Run a sample browser transfer and see its file manifest, hashes, progress, and finished receipt.',
+  demo: 'Run a sample browser transfer and see its file list, digital fingerprints, progress, and finished receipt.',
   privacy: 'Read how Friend File Drop handles files, connection details, local receipts, and demo data.',
   terms: 'Read the plain-language terms for using Friend File Drop.',
   'not-found': 'This Friend File Drop page could not be found.'
@@ -81,7 +81,7 @@ function footer(): string {
   return `<footer class="site-footer">
     <p>Send private files and keep a finished receipt.</p>
     <nav aria-label="Footer navigation"><a href="/privacy" data-link>Privacy</a><a href="/terms" data-link>Terms</a></nav>
-    <p>Built by Param Factory · v1.1.4 · <span title="Generated with the factory image model">Original generated art</span></p>
+    <p>Built by Param Factory · v1.1.5 · <span title="Generated with the factory image model">Original generated art</span></p>
   </footer>`;
 }
 
@@ -131,13 +131,13 @@ function homePage(): string {
     <section class="how-section" id="how" aria-labelledby="how-title">
       <div class="section-intro"><p class="margin-number">02</p><div><h2 id="how-title">How browser-to-browser transfer works</h2><p>The room code connects the two browsers.</p></div></div>
       <ol class="lab-steps">
-        <li><span>1</span><div><h3>Choose the files</h3><p>The sender sees every name, size, and SHA-256 hash before sending.</p></div></li>
+        <li><span>1</span><div><h3>Choose the files</h3><p>The sender sees every name, size, and digital fingerprint before sending. Each fingerprint uses SHA-256.</p></div></li>
         <li><span>2</span><div><h3>Share six words</h3><p>The receiver enters the room code. The room code works for 15 minutes.</p></div></li>
-        <li><span>3</span><div><h3>Check the receipt</h3><p>Both browsers record the names, hashes, and finish time.</p></div></li>
+        <li><span>3</span><div><h3>Check the receipt</h3><p>Both browsers record the names, fingerprints, and finish time.</p></div></li>
       </ol>
     </section>
     <section class="limits-section" aria-labelledby="limits-title">
-      <div class="torn-note"><h2 id="limits-title">What the room service handles</h2><ul><li>Room connection details expire after 15 minutes.</li><li>The app never asks for your contacts.</li><li>Files go direct unless both people choose the relay.</li><li>The relay accepts up to 25 MB and removes file bytes after the receipt.</li></ul></div>
+      <div class="torn-note"><h2 id="limits-title">What leaves your browser</h2><ul><li>The room service gets the six-word code and connection details for 15 minutes.</li><li>The app never asks for your contacts.</li><li>Files go direct unless both people choose the relay.</li><li>The relay accepts up to 25 MB and removes file bytes after the receipt.</li></ul></div>
     </section>
   </main>`);
 }
@@ -145,26 +145,26 @@ function homePage(): string {
 function demoPage(): string {
   return shell(`<main id="main" class="demo-main">
     <section class="demo-heading notebook-grid">
-      <div><p class="eyebrow">One-click practice transfer</p><h1 id="demo-title" tabindex="-1">Send sample files and check the receipt</h1><p class="lead">Three sample files are ready. Run the transfer without using your files.</p></div>
+      <div><p class="eyebrow">One-click practice transfer</p><h1 id="demo-title" tabindex="-1">Sample files ready</h1><p class="lead">Run the transfer without using files from your device.</p></div>
       <div class="demo-code"><span>Room code</span><strong>maple-river-coral-finch-paper-moon</strong></div>
     </section>
     <section class="demo-sheet" aria-labelledby="sample-title">
-      <div class="sheet-heading"><div><h2 id="sample-title">Sample manifest</h2><p>From Mina's phone · Saturday picnic</p></div><span class="paperclip" aria-hidden="true"></span></div>
+      <div class="sheet-heading"><div><h2 id="sample-title">Sample files</h2><p>From Mina's phone · Saturday picnic</p></div><span class="paperclip" aria-hidden="true"></span></div>
+      <div class="transfer-controls"><button class="button primary" type="button" id="run-demo">Send sample files</button><p id="demo-state" class="state-note" role="status">Ready. The sample makes no API request and uses no files from your device.</p></div>
       <ul class="file-list" id="demo-files"></ul>
-      <div class="transfer-controls"><button class="button primary" type="button" id="run-demo">Send sample files</button><p id="demo-state" class="state-note" role="status">Ready. No network or real files are used.</p></div>
       <div id="demo-receipt"></div>
     </section>
   </main>`, true);
 }
 
 function legalPage(kind: 'privacy' | 'terms'): string {
-  const privacy = `<article class="legal-sheet"><p class="eyebrow">Plain-language policy · 29 August 2026</p><h1 tabindex="-1">Know what each transfer shares</h1><p class="lead">Friend File Drop uses a short-lived room service to connect two browsers.</p><h2>Direct transfers</h2><p>The room service receives the six-word code, network address, and connection details. File names, hashes, contents, and receipts travel only through the paired browser connection.</p><h2>Relay transfers</h2><p>The relay is used only after both people choose it. It then receives the file list and contents through an encrypted web connection. It limits each room to 25 MB and removes file bytes after the receipt or room expiry.</p><h2>What stays on this device</h2><p>Finished receipts and saved parts of interrupted transfers stay only in this browser. Demo data stays only in the demo tab. The most recent room code and its file names, sizes, hashes, and transfer IDs also stay in this browser. This lets a sender choose the same files and reopen the room. The next room replaces this data. You can also clear it from the transfer sheet or by clearing site data.</p><h2>Tracking and contacts</h2><p>The app has no analytics, advertising, third-party runtime scripts, or contact access.</p><h2>Contact</h2><p>Privacy questions can be sent to <a href="mailto:privacy@sociobot.in">privacy@sociobot.in</a>.</p></article>`;
+  const privacy = `<article class="legal-sheet"><p class="eyebrow">Plain-language policy · 29 August 2026</p><h1 tabindex="-1">Know what each transfer shares</h1><p class="lead">Friend File Drop uses a short-lived room service to connect two browsers.</p><h2>Direct transfers</h2><p>The room service gets the six-word code and connection details. It does not get file names, digital fingerprints, file contents, or receipts from a direct transfer.</p><h2>Relay transfers</h2><p>The relay is used only after both people choose it. It then receives the file list and contents. It limits each room to 25 MB and removes file bytes after the receipt or room expiry.</p><h2>What stays on this device</h2><p>Finished receipts and saved parts of interrupted transfers stay only in this browser. Demo data stays only in the demo tab. The latest room code and details needed to continue also stay in this browser. This lets a sender choose the same files and reopen the room. The next room replaces this data. You can also clear it from the transfer sheet or by clearing site data.</p><h2>Tracking and contacts</h2><p>The app has no analytics, advertising, third-party runtime scripts, or contact access.</p><h2>Contact</h2><p>Privacy questions can be sent to <a href="mailto:privacy@sociobot.in">privacy@sociobot.in</a>.</p></article>`;
   const terms = `<article class="legal-sheet"><p class="eyebrow">Terms · 28 August 2026</p><h1 tabindex="-1">Use Friend File Drop with care</h1><p class="lead">You may use this free tool to send files you have the right to share.</p><h2>Your responsibility</h2><p>Do not send illegal, harmful, or unwanted material. Confirm the six words with your intended recipient.</p><h2>Availability</h2><p>The tool is provided as-is. Browser, device, and network limits can interrupt a transfer. Keep the original file until the receipt appears.</p><h2>Temporary relay custody</h2><p>If both people choose the relay, it temporarily holds file bytes. A local receipt is not a backup of file contents.</p><h2>Contact</h2><p>Terms questions can be sent to <a href="mailto:hello@sociobot.in">hello@sociobot.in</a>.</p></article>`;
   return shell(`<main id="main" class="legal-main">${kind === 'privacy' ? privacy : terms}</main>`);
 }
 
 function notFoundPage(): string {
-  return shell(`<main id="main" class="not-found"><div class="lost-sheet"><p class="error-code">404</p><h1 tabindex="-1">This notebook page is missing</h1><p>The address does not point to a page here.</p><a class="button primary" href="/" data-link>Return to the file drop</a></div></main>`);
+  return shell(`<main id="main" class="not-found"><div class="lost-sheet"><p class="error-code">404</p><h1 tabindex="-1">Page not found</h1><p>The address does not point to a page here.</p><a class="button primary" href="/" data-link>Return to the file drop</a></div></main>`);
 }
 
 const sampleFiles: FileManifest[] = [
@@ -174,7 +174,7 @@ const sampleFiles: FileManifest[] = [
 ];
 
 function fileRow(file: FileManifest, withRemove = false): string {
-  return `<li class="file-row" data-file-id="${file.id}"><div class="file-name"><span class="file-dot" aria-hidden="true"></span><div><strong>${escapeText(file.name)}</strong><span>${formatBytes(file.size)} · SHA-256</span><code class="file-hash">${file.hash}</code></div></div><progress value="0" max="${file.size}" aria-label="Progress for ${escapeText(file.name)}"></progress><span class="file-status">Waiting</span>${withRemove ? `<button class="remove-file" type="button" data-remove="${file.id}" aria-label="Remove ${escapeText(file.name)}">Remove</button>` : ''}</li>`;
+  return `<li class="file-row" data-file-id="${file.id}"><div class="file-name"><span class="file-dot" aria-hidden="true"></span><div><strong>${escapeText(file.name)}</strong><span>${formatBytes(file.size)} · Digital fingerprint (SHA-256)</span><code class="file-hash">${file.hash}</code></div></div><progress value="0" max="${file.size}" aria-label="Progress for ${escapeText(file.name)}"></progress><span class="file-status">Waiting</span>${withRemove ? `<button class="remove-file" type="button" data-remove="${file.id}" aria-label="Remove ${escapeText(file.name)}">Remove</button>` : ''}</li>`;
 }
 
 function receiptMarkup(receipt: SavedReceipt): string {
@@ -205,7 +205,7 @@ function setupDemo(): void {
     list.querySelectorAll<HTMLProgressElement>('progress').forEach((progress) => (progress.value = progress.max));
     list.querySelectorAll<HTMLElement>('.file-status').forEach((status) => (status.textContent = 'Verified'));
     receiptBox.innerHTML = receiptMarkup(receipt);
-    state.textContent = 'Finished. The hashes match.';
+    state.textContent = 'Finished. The digital fingerprints match.';
     button.textContent = 'Run the sample again';
     attachReceiptDownload(receiptBox, receipt);
   }
@@ -227,7 +227,7 @@ function setupDemo(): void {
         sessionStorage.setItem('demo:completed', JSON.stringify(receipt));
         receiptBox.innerHTML = receiptMarkup(receipt);
         attachReceiptDownload(receiptBox, receipt);
-        state.textContent = 'Finished. The hashes match.';
+        state.textContent = 'Finished. The digital fingerprints match.';
         button.disabled = false;
         button.textContent = 'Run the sample again';
       }
@@ -302,13 +302,13 @@ function setupTransferApp(): void {
 
   function renderSender(): void {
     const panel = root!.querySelector<HTMLDivElement>('#mode-panel')!;
-    panel.innerHTML = `<div class="sender-layout"><div><label class="drop-zone" id="file-drop"><input id="file-input" type="file" multiple /><span class="drop-title">Choose files to send</span><span>or drop them on this sheet</span></label><p class="field-help">The list shows file sizes and hashes before anything moves.</p></div><div class="manifest-panel"><h3>File manifest</h3><ul class="file-list compact" id="real-files"><li class="empty-state">Your chosen files will appear here.</li></ul></div></div><div id="pairing-area"></div><div id="real-receipt"></div>`;
+    panel.innerHTML = `<div class="sender-layout"><div><label class="drop-zone" id="file-drop"><input id="file-input" type="file" multiple /><span class="drop-title">Choose files to send</span><span>or drop them on this sheet</span></label><p class="field-help">The file list shows each file's name, size, and digital fingerprint before anything moves. A fingerprint uses SHA-256.</p></div><div class="manifest-panel"><h3>Files to send</h3><ul class="file-list compact" id="real-files"><li class="empty-state">Your chosen files will appear here.</li></ul></div></div><div id="pairing-area"></div><div id="real-receipt"></div>`;
     const input = panel.querySelector<HTMLInputElement>('#file-input')!;
     const zone = panel.querySelector<HTMLElement>('#file-drop')!;
     const choose = async (selected: File[]) => {
       files = selected;
       const list = panel.querySelector<HTMLUListElement>('#real-files')!;
-      list.innerHTML = '<li class="empty-state">Calculating SHA-256 hashes…</li>';
+      list.innerHTML = '<li class="empty-state">Calculating digital fingerprints…</li>';
       try {
         manifests = restoreManifestIds(files, await buildManifest(files));
         list.innerHTML = manifests.map((file) => fileRow(file, true)).join('');
@@ -331,7 +331,7 @@ function setupTransferApp(): void {
     const area = root!.querySelector<HTMLDivElement>('#pairing-area')!;
     if (!files.length) { area.innerHTML = ''; return; }
     const previousRoom = localStorage.getItem(LAST_ROOM_KEY) || '';
-    area.innerHTML = `<section class="pair-sheet" aria-labelledby="pair-title"><h3 id="pair-title">Pair the receiving browser</h3><ol class="pair-steps"><li><button class="button primary" type="button" id="make-room">Make a six-word room</button><details class="resume-room"><summary>Resume a previous room</summary><label for="resume-code">Previous room code</label><input id="resume-code" class="room-input" value="${escapeText(previousRoom)}" autocomplete="off" spellcheck="false" /><button class="text-button" id="resume-room" type="button">Reopen this room</button><button class="text-button" id="forget-room" type="button">Clear saved room code</button></details><div id="offer-box"></div></li><li><p>Tell the receiver the six words. This room expires after 15 minutes.</p><details class="relay-choice"><summary>Direct path not working?</summary><p>The relay receives file names, hashes, contents, IP addresses, and byte counts. It holds up to 25 MB until the receipt or room expiry.</p><button class="button secondary" type="button" id="sender-relay" disabled>Use the private relay</button></details></li><li><button class="button primary" type="button" id="send-now" disabled>Send ${files.length} file${files.length === 1 ? '' : 's'}</button><p id="real-state" class="state-note" role="status">Make a room to start pairing.</p></li></ol></section>`;
+    area.innerHTML = `<section class="pair-sheet" aria-labelledby="pair-title"><h3 id="pair-title">Pair the receiving browser</h3><ol class="pair-steps"><li><button class="button primary" type="button" id="make-room">Make a six-word room</button><details class="resume-room"><summary>Resume a previous room</summary><label for="resume-code">Previous room code</label><input id="resume-code" class="room-input" value="${escapeText(previousRoom)}" autocomplete="off" spellcheck="false" /><button class="text-button" id="resume-room" type="button">Reopen this room</button><button class="text-button" id="forget-room" type="button">Clear saved room code</button></details><div id="offer-box"></div></li><li><p>Tell the receiver the six words. This room expires after 15 minutes.</p><details class="relay-choice"><summary>Direct path not working?</summary><p>The relay receives file names, digital fingerprints, contents, IP addresses, and byte counts. It holds up to 25 MB until the receipt or room expiry.</p><button class="button secondary" type="button" id="sender-relay" disabled>Use the private relay</button></details></li><li><button class="button primary" type="button" id="send-now" disabled>Send ${files.length} file${files.length === 1 ? '' : 's'}</button><p id="real-state" class="state-note" role="status">Make a room to start pairing.</p></li></ol></section>`;
     const openRoom = async (code: string, reopen = false) => {
       roomCode = code;
       transfer = new DirectTransfer(roomCode, hooks());
@@ -383,7 +383,7 @@ function setupTransferApp(): void {
 
   function renderReceiver(): void {
     const panel = root!.querySelector<HTMLDivElement>('#mode-panel')!;
-    panel.innerHTML = `<section class="pair-sheet receive-sheet" aria-labelledby="receive-title"><h3 id="receive-title">Join the sender's room</h3><label for="room-code">Six-word room code</label><input id="room-code" class="room-input" type="text" autocomplete="off" spellcheck="false" placeholder="amber-apple-atlas-birch-blue-brisk" aria-describedby="room-help" /><p id="room-help" class="field-help">Ask the sender for the six words shown on their screen.</p><button class="button primary" id="join-room" type="button">Join this room</button><details class="relay-choice"><summary>Direct path not working?</summary><p>The relay receives file names, hashes, contents, IP addresses, and byte counts. It holds up to 25 MB until the receipt or room expiry.</p><button class="button secondary" id="receiver-relay" type="button" disabled>Use the private relay</button></details><p id="real-state" class="state-note" role="status">Enter the sender's six-word room code.</p></section><section class="manifest-panel received-panel"><h3>Incoming file manifest</h3><ul class="file-list compact" id="real-files"><li class="empty-state">File names and sizes appear after the browsers connect.</li></ul></section><div id="real-receipt"></div>`;
+    panel.innerHTML = `<section class="pair-sheet receive-sheet" aria-labelledby="receive-title"><h3 id="receive-title">Join the sender's room</h3><label for="room-code">Six-word room code</label><input id="room-code" class="room-input" type="text" autocomplete="off" spellcheck="false" placeholder="amber-apple-atlas-birch-blue-brisk" aria-describedby="room-help" /><p id="room-help" class="field-help">Ask the sender for the six words shown on their screen.</p><button class="button primary" id="join-room" type="button">Join this room</button><details class="relay-choice"><summary>Direct path not working?</summary><p>The relay receives file names, digital fingerprints, contents, IP addresses, and byte counts. It holds up to 25 MB until the receipt or room expiry.</p><button class="button secondary" id="receiver-relay" type="button" disabled>Use the private relay</button></details><p id="real-state" class="state-note" role="status">Enter the sender's six-word room code.</p></section><section class="manifest-panel received-panel"><h3>Incoming files</h3><ul class="file-list compact" id="real-files"><li class="empty-state">File names and sizes appear after the browsers connect.</li></ul></section><div id="real-receipt"></div>`;
     panel.querySelector('#join-room')?.addEventListener('click', async () => {
       const input = panel.querySelector<HTMLInputElement>('#room-code')!;
       const code = input.value.trim().toLowerCase();

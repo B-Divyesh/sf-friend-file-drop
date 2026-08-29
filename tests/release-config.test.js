@@ -52,7 +52,9 @@ test('every declared claim has one tagged test and the catalog line meets its co
 test('reader copy does not regress to the rejected review wording', async () => {
   const readme = await readFile(new URL('../README.md', import.meta.url), 'utf8');
   const product = await readFile(new URL('../src/main.ts', import.meta.url), 'utf8');
-  for (const rejected of ['saved offset', 'verified pieces', 'session-storage', 'Each file crosses once', 'same record', 'How the files cross', 'Margin note', 'Start for real']) {
+  for (const rejected of ['saved offset', 'verified pieces', 'session-storage', 'Each file crosses once', 'same record', 'How the files cross', 'Margin note', 'Start for real', 'Try the sandbox', 'File manifest', 'Sample manifest', 'Incoming file manifest', 'What the room service handles', 'FIELD NOTE 01', 'This notebook page is missing', 'No network or real files are used', 'through an encrypted web connection']) {
     assert.doesNotMatch(`${readme}\n${product}`, new RegExp(rejected, 'i'));
   }
+  assert.match(product, /digital fingerprint before anything moves\. A fingerprint uses SHA-256\./);
+  assert.match(product, /<h2 id="limits-title">What leaves your browser<\/h2>/);
 });

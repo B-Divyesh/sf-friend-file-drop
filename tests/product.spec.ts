@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-import type { Browser, Page, Route } from '@playwright/test';
+import type { Browser, Page, Request, Route } from '@playwright/test';
 import { createHash } from 'node:crypto';
 
 type MockRoom = {
@@ -12,6 +12,7 @@ type MockRoom = {
   relay: { sender: boolean; receiver: boolean };
   manifest?: Array<{ id: string; name: string; type: string; size: number; hash: string }>;
   files: Map<string, Buffer>;
+  uploads?: Buffer[];
   receipt?: unknown;
 };
 
@@ -34,7 +35,9 @@ function installRoomApi(page: Page, rooms: Map<string, MockRoom>, options: RoomA
       if (request.method() === 'PUT') {
         const offset = Number(url.searchParams.get('offset') || 0);
         const existing = room.files.get(id) || Buffer.alloc(0);
-        if (existing.length === offset) room.files.set(id, Buffer.concat([existing, request.postDataBuffer() || Buffer.alloc(0)]));
+        const upload = request.postDataBuffer() || Buffer.alloc(0);
+        room.uploads = [...(room.uploads || []), upload];
+        if (existing.length === offset) room.files.set(id, Buffer.concat([existing, upload]));
         return json(200, { accepted: room.files.get(id)?.length || 0 });
       }
       const file = room.files.get(id);
@@ -202,7 +205,7 @@ test('sample transfer produces a three-file receipt @claim:demo-receipt', async 
   await expect(page.getByRole('heading', { name: 'Transfer finished' })).toBeVisible();
   await expect(page.locator('.receipt li')).toHaveCount(3);
   await expect(page.locator('.file-status')).toHaveText(['Verified', 'Verified', 'Verified']);
-  await expect(page.getByText('Finished. The hashes match.')).toBeVisible();
+  await expect(page.getByText('Finished. The digital fingerprints match.')).toBeVisible();
 });
 
 test('demo opens without an account step @claim:no-account', async ({ page }) => {
@@ -222,6 +225,7 @@ test('one click opens the isolated demo with three ready sample files @claim:dem
   page.on('request', (request) => {
     if (new URL(request.url()).pathname.startsWith('/api/')) apiRequests.push(request.url());
   });
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
   await page.getByRole('link', { name: 'Try it with sample data' }).click();
   await expect(page).toHaveURL('/?demo=1');
@@ -230,15 +234,33 @@ test('one click opens the isolated demo with three ready sample files @claim:dem
   const rows = page.locator('#demo-files .file-row');
   await expect(rows).toHaveCount(3);
   await expect(rows.nth(0)).toContainText('picnic-table.jpg');
-  await expect(rows.nth(0)).toContainText('2.3 MB · SHA-256');
+  await expect(rows.nth(0)).toContainText('2.3 MB · Digital fingerprint (SHA-256)');
   await expect(rows.nth(0).locator('.file-hash')).toHaveText('7d6937b9d57b343a82c930f195567f9eb64e16ef52fe32d926e5130fb37376c1');
   await expect(rows.nth(1)).toContainText('family-recipes.pdf');
-  await expect(rows.nth(1)).toContainText('840.0 KB · SHA-256');
+  await expect(rows.nth(1)).toContainText('840.0 KB · Digital fingerprint (SHA-256)');
   await expect(rows.nth(1).locator('.file-hash')).toHaveText('62fdfe29e7c9fba645a4a943c8e6d7fca73f43c1f228288d0c844991afa88497');
   await expect(rows.nth(2)).toContainText('read-me-first.txt');
-  await expect(rows.nth(2)).toContainText('1.2 KB · SHA-256');
+  await expect(rows.nth(2)).toContainText('1.2 KB · Digital fingerprint (SHA-256)');
   await expect(rows.nth(2).locator('.file-hash')).toHaveText('b47b67ef28ed857e3aee9f8c43c129e95d1a956f53cb696637d290f0dc554ee2');
   await expect(page.locator('input[type="file"]')).toHaveCount(0);
+  const firstScreen = await page.evaluate(() => {
+    const viewport = window.innerHeight;
+    const isVisible = (selector: string) => {
+      const rect = document.querySelector(selector)?.getBoundingClientRect();
+      return !!rect && rect.top >= 0 && rect.bottom <= viewport;
+    };
+    return {
+      firstRow: isVisible('#demo-files .file-row'),
+      action: isVisible('#run-demo'),
+      banner: isVisible('.demo-banner')
+    };
+  });
+  expect(firstScreen).toEqual({ firstRow: true, action: true, banner: true });
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  await expect.poll(() => page.locator('.demo-banner').evaluate((banner) => {
+    const rect = banner.getBoundingClientRect();
+    return rect.top >= 0 && rect.bottom <= window.innerHeight;
+  })).toBe(true);
   expect(apiRequests).toEqual([]);
 });
 
@@ -251,6 +273,7 @@ test('demo stays isolated and leaving clears its session @claim:demo-isolation @
     if (url.pathname.startsWith('/api/')) apiRequests.push(request.url());
   });
   await page.goto('/?demo=1');
+  await expect(page.getByText('Ready. The sample makes no API request and uses no files from your device.')).toBeVisible();
   await page.getByRole('button', { name: 'Send sample files' }).click();
   await expect(page.getByRole('heading', { name: 'Transfer finished' })).toBeVisible();
   expect(foreign).toEqual([]);
@@ -276,7 +299,7 @@ test('demo reloads after the network is turned off @claim:offline-reload', async
   await context.setOffline(true);
   await page.reload();
   await expect(page).toHaveTitle('Demo — Friend File Drop');
-  await expect(page.getByRole('heading', { level: 1, name: 'Send sample files and check the receipt' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Sample files ready' })).toBeVisible();
 });
 
 test('selected file details appear before a room exists @claim:manifest-before-transfer', async ({ page }) => {
@@ -290,19 +313,26 @@ test('selected file details appear before a room exists @claim:manifest-before-t
   await page.locator('#file-input').setInputFiles({ name: 'before-room.txt', mimeType: 'text/plain', buffer: bytes });
   const row = page.locator('#real-files .file-row');
   await expect(row.getByText('before-room.txt')).toBeVisible();
-  await expect(row.getByText('35 B · SHA-256')).toBeVisible();
+  await expect(row.getByText('35 B · Digital fingerprint (SHA-256)')).toBeVisible();
   await expect(row.getByText(hash)).toBeVisible();
+  await expect(page.getByText('A fingerprint uses SHA-256.')).toBeVisible();
   await expect(page.locator('.room-label')).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Send 1 file' })).toBeDisabled();
   expect(roomRequests).toEqual([]);
 });
 
-test('direct transfer withholds receipts for corrupt bytes until a verified retry @claim:six-word-room @claim:direct-transfer @claim:local-receipts @regression:corrupt-direct-receipt', async ({ browser }) => {
+test('direct transfer withholds receipts for corrupt bytes until a verified retry @claim:six-word-room @claim:direct-transfer @claim:connection-metadata-boundary @claim:local-receipts @regression:corrupt-direct-receipt', async ({ browser }) => {
   const senderContext = await browser.newContext();
   const receiverContext = await browser.newContext();
   const sender = await senderContext.newPage();
   const receiver = await receiverContext.newPage();
   const rooms = new Map<string, MockRoom>();
+  const directRoomRequests: Array<{ url: string; body: string }> = [];
+  const captureRoomRequest = (request: Request) => {
+    if (new URL(request.url()).pathname.startsWith('/api/rooms/')) directRoomRequests.push({ url: request.url(), body: request.postData() || '' });
+  };
+  sender.on('request', captureRoomRequest);
+  receiver.on('request', captureRoomRequest);
   await Promise.all([installRoomApi(sender, rooms), installRoomApi(receiver, rooms)]);
   await Promise.all([sender.goto('/'), receiver.goto('/')]);
   await sender.locator('#file-input').setInputFiles({ name: 'hello-friend.txt', mimeType: 'text/plain', buffer: Buffer.from('A private hello from one browser to another.') });
@@ -325,7 +355,7 @@ test('direct transfer withholds receipts for corrupt bytes until a verified retr
     };
   });
   await sender.getByRole('button', { name: 'Send 1 file' }).click();
-  await expect(receiver.getByText('hello-friend.txt did not match its hash. Rejoin to retry it.')).toBeVisible();
+  await expect(receiver.getByText('hello-friend.txt did not match its digital fingerprint. Rejoin to retry it.')).toBeVisible();
   await expect(receiver.locator('#real-files .file-status')).toHaveText('Failed');
   await expect(receiver.getByRole('link', { name: 'Save file' })).toHaveCount(0);
   await expect(receiver.getByRole('heading', { name: 'Transfer finished' })).toHaveCount(0);
@@ -339,6 +369,18 @@ test('direct transfer withholds receipts for corrupt bytes until a verified retr
   await expect(sender.getByRole('heading', { name: 'Transfer finished' })).toBeVisible();
   await expect.poll(() => sender.evaluate(() => indexedDB.databases().then((items) => items.map((item) => item.name)))).toContain('friend-file-drop');
   expect(await Promise.all([receiptCount(sender), receiptCount(receiver)])).toEqual([1, 1]);
+  const fixtureBytes = 'A private hello from one browser to another.';
+  const fingerprint = createHash('sha256').update(fixtureBytes).digest('hex');
+  expect(directRoomRequests).not.toEqual([]);
+  expect(directRoomRequests.every((request) => request.url.endsWith(`/api/rooms/${code}`))).toBeTruthy();
+  expect(directRoomRequests.some((request) => request.body.includes('"offer"'))).toBeTruthy();
+  expect(directRoomRequests.some((request) => request.body.includes('"answer"'))).toBeTruthy();
+  for (const request of directRoomRequests) {
+    expect(request.body).not.toContain('hello-friend.txt');
+    expect(request.body).not.toContain(fixtureBytes);
+    expect(request.body).not.toContain(fingerprint);
+    expect(request.body).not.toContain('"receipt"');
+  }
   await senderContext.close();
   await receiverContext.close();
 });
@@ -456,6 +498,7 @@ test('relay needs both choices and removes bytes after receipt @claim:opt-in-rel
     await chooseRelay(pair);
     await pair.sender.getByRole('button', { name: 'Send 1 file' }).click();
     await expect.poll(() => pair.rooms.get(pair.code)?.manifest?.length).toBe(1);
+    await expect.poll(() => pair.rooms.get(pair.code)?.uploads?.some((body) => body.equals(Buffer.from('isolated relay payload for relay.txt')))).toBe(true);
     await expect(pair.receiver.getByRole('heading', { name: 'Transfer finished' })).toBeVisible({ timeout: 10_000 });
     await expect.poll(() => pair.rooms.get(pair.code)?.files.size).toBe(0);
   } finally {
@@ -604,7 +647,7 @@ test('the saved room code is visible, documented, and removable @claim:room-code
   await expect.poll(() => page.evaluate(() => localStorage.getItem('friend-file-drop:last-room'))).toBeNull();
   await expect.poll(() => page.evaluate(() => localStorage.getItem('friend-file-drop:last-transfer'))).toBeNull();
   await page.goto('/privacy');
-  await expect(page.getByText('The most recent room code and its file names, sizes, hashes, and transfer IDs also stay in this browser.')).toBeVisible();
+  await expect(page.getByText('The latest room code and details needed to continue also stay in this browser.')).toBeVisible();
 });
 
 test('privacy boundaries match storage and loaded resources @claim:privacy-boundaries', async ({ page }) => {
@@ -652,7 +695,7 @@ test('history routes update titles, metadata, focus, and legal links', async ({ 
 test('unknown addresses show the notebook 404 page', async ({ page }) => {
   await page.goto('/missing-page');
   await expect(page).toHaveTitle('Page not found — Friend File Drop');
-  await expect(page.getByRole('heading', { level: 1, name: 'This notebook page is missing' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Page not found' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Return to the file drop' })).toBeVisible();
 });
 
@@ -662,6 +705,14 @@ test('mobile first screen keeps the actions visible', async ({ page }) => {
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Try it with sample data' })).toBeVisible();
   expect((await page.locator('body').evaluate((body) => body.scrollWidth)) <= 390).toBeTruthy();
+});
+
+test('desktop first screen keeps every product fact in view', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/');
+  const facts = await page.locator('.plain-facts li').evaluateAll((items) => items.map((item) => item.getBoundingClientRect().bottom));
+  expect(facts).toHaveLength(3);
+  expect(facts.every((bottom) => bottom <= 900)).toBeTruthy();
 });
 
 test('keyboard users can reveal skip navigation and switch transfer roles with arrows', async ({ page }) => {

@@ -1,24 +1,24 @@
 [
   {
     "id": "demo-ready-in-one-click",
-    "claim": "One click opens a ready demo with three sample files, sizes, and hashes.",
+    "claim": "One click opens a ready phone demo with three sample files, sizes, and digital fingerprints.",
     "where": "landing action note, demo documentation, and README",
     "test": "npm test -- --grep @claim:demo-ready-in-one-click",
-    "sandbox": "fresh browser context at /; click the primary sample action once; assert /?demo=1, banner, three exact sample rows, no file input, and no API request"
+    "sandbox": "fresh 390 × 844 browser context at /; click the primary sample action once; assert /?demo=1, sticky banner, sample action, and the first exact sample row are in the viewport; assert all three exact rows, no file input, and no API request"
   },
   {
     "id": "demo-receipt",
-    "claim": "The sample transfer finishes with three matching file hashes and a receipt.",
-    "where": "demo manifest and receipt",
+    "claim": "The sample transfer finishes with three matching digital fingerprints and a receipt.",
+    "where": "demo file list and receipt",
     "test": "npm test -- --grep @claim:demo-receipt",
     "sandbox": "fresh browser context at /?demo=1; run bundled sample transfer"
   },
   {
     "id": "manifest-before-transfer",
-    "claim": "The sender sees each selected file's name, size, and SHA-256 hash before creating a room or sending.",
+    "claim": "The sender sees each selected file's name, size, and digital fingerprint before creating a room or sending.",
     "where": "transfer sheet and How browser-to-browser transfer works",
     "test": "npm test -- --grep @claim:manifest-before-transfer",
-    "sandbox": "fresh browser context; select a fixture, assert its name, size, and full SHA-256 value before any room request"
+    "sandbox": "fresh browser context; select a fixture, assert its name, size, labeled SHA-256 digital fingerprint, and full value before any room request"
   },
   {
     "id": "no-account",
@@ -64,10 +64,17 @@
   },
   {
     "id": "direct-transfer",
-    "claim": "Files move directly between connected browsers and both sides get a hash receipt.",
+    "claim": "Files move directly between connected browsers and both sides get a matching receipt.",
     "where": "landing facts, how it works, and README",
     "test": "npm test -- --grep @claim:direct-transfer",
     "sandbox": "two fresh browser contexts; join by room code, transfer a fixture, verify download and both receipts"
+  },
+  {
+    "id": "connection-metadata-boundary",
+    "claim": "A direct transfer sends the room service only the six-word code and connection details, not file names, digital fingerprints, file bytes, or receipts.",
+    "where": "privacy page and What leaves your browser",
+    "test": "npm test -- --grep @claim:connection-metadata-boundary",
+    "sandbox": "two fresh browser contexts with an isolated room-service fixture; capture every direct room request and assert its URL contains the room code and its bodies contain connection offers/answers but no fixture name, digital fingerprint, bytes, or receipt"
   },
   {
     "id": "resumable-transfer",
@@ -85,10 +92,10 @@
   },
   {
     "id": "opt-in-relay",
-    "claim": "The relay starts only after both people choose it and removes file bytes after the receipt.",
+    "claim": "The relay gets the file list and contents only after both people choose it, then removes file bytes after the receipt.",
     "where": "transfer disclosure, privacy page, and README",
     "test": "npm test -- --grep @claim:opt-in-relay",
-    "sandbox": "two fresh contexts with an isolated relay fixture; assert one consent waits, two transfer, and receipt clears bytes"
+    "sandbox": "two fresh contexts with an isolated relay fixture; assert one consent waits, two consents expose one file list and content upload, and the receipt clears bytes"
   },
   {
     "id": "relay-cap",

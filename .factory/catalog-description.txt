@@ -1,1 +1,1 @@
-Send files between devices and keep a matching receipt.
+Send files directly between devices and keep a receipt.

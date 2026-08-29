@@ -135,7 +135,7 @@ test('health endpoint identifies the exact deployed API build @claim:api-health'
     assert.equal(context.res.status, 200);
     assert.equal(context.res.headers['cache-control'], 'no-store');
     assert.equal(context.res.body.service, 'friend-file-drop-api');
-    assert.match(context.res.body.version, /^1\.1\.4$/);
+    assert.match(context.res.body.version, /^1\.1\.5$/);
     assert.equal(context.res.body.sourceRevision, sourceRevision);
     assert.equal(context.res.body.deploymentId, 'deployment-under-test');
     assert.equal(context.res.body.status, 'ready');

@@ -15,7 +15,7 @@ test('deployed API health identifies this exact candidate @regression:live-build
   const body = await response.json() as Record<string, unknown>;
   expect(body).toMatchObject({
     service: 'friend-file-drop-api',
-    version: '1.1.4',
+    version: '1.1.5',
     sourceRevision: candidateRevision,
     status: 'ready'
   });
@@ -87,7 +87,7 @@ test('deployed demo reloads offline after service-worker control', async ({ page
   await context.setOffline(true);
   await page.reload();
   await expect(page).toHaveTitle('Demo — Friend File Drop');
-  await expect(page.getByRole('heading', { name: 'Send sample files and check the receipt' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Sample files ready' })).toBeVisible();
 });
 
 test('deployed direct transfer withholds receipts for corrupt bytes until a verified retry @regression:live-corrupt-direct-receipt', async ({ browser }) => {
@@ -114,7 +114,7 @@ test('deployed direct transfer withholds receipts for corrupt bytes until a veri
     };
   });
   await sender.getByRole('button', { name: 'Send 1 file' }).click();
-  await expect(receiver.getByText('live-direct.txt did not match its hash. Rejoin to retry it.')).toBeVisible({ timeout: 15_000 });
+  await expect(receiver.getByText('live-direct.txt did not match its digital fingerprint. Rejoin to retry it.')).toBeVisible({ timeout: 15_000 });
   await expect(receiver.locator('#real-files .file-status')).toHaveText('Failed');
   await expect(receiver.getByRole('link', { name: 'Save file' })).toHaveCount(0);
   await expect(receiver.getByRole('heading', { name: 'Transfer finished' })).toHaveCount(0);

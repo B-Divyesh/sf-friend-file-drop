@@ -263,7 +263,7 @@ export class DirectTransfer {
           catch { await delay(800); }
         }
         const hash = await hashFile(blob);
-        if (hash !== manifest.hash) throw new Error(`${manifest.name} did not match its hash.`);
+        if (hash !== manifest.hash) throw new Error(`${manifest.name} did not match its digital fingerprint.`);
         this.hooks.onProgress(manifest.id, manifest.size, manifest.size);
         this.hooks.onFile(manifest, blob);
         receivedFiles.push({ name: manifest.name, size: manifest.size, hash: manifest.hash });
@@ -383,7 +383,7 @@ export class DirectTransfer {
         this.verifiedIncoming.delete(message.id);
         this.failedIncoming.add(message.id);
         this.hooks.onFileError(entry.manifest);
-        this.setDirectState('failed', `${entry.manifest.name} did not match its hash. Rejoin to retry it.`, 'error');
+        this.setDirectState('failed', `${entry.manifest.name} did not match its digital fingerprint. Rejoin to retry it.`, 'error');
         return;
       }
       await clearPartialChunks(this.roomCode, message.id);
