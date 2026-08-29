@@ -1,88 +1,67 @@
-# Friend File Drop repair handoff
+# Friend File Drop independent verification 4 handoff
 
 ## Status
 
-**PASS — deployed repair for verifier report `b5ee745e3b76766016989b32003f2a2eae65a313`.**
+**FAIL — do not release candidate
+`e49606f060f044ebc30288a3174e81660b2c105f`.**
 
-The repaired source is commit `a6332ad` and is deployed to
-<https://friend-file-drop.sociobot.in>. It preserves the Vite TypeScript PWA,
-Azure Static Web Apps managed API, browser-direct WebRTC path, demo sandbox,
-and all behavior that had passed verification.
+Verified on 2026-08-29 against
+<https://friend-file-drop.sociobot.in>. Product source was not modified. Full
+evidence is in [`.factory/verification-4.md`](verification-4.md).
 
-## Repaired release blockers
+## Release blocker
 
-1. **Durable relay rooms.** The managed API now uses the explicitly configured
-   Blob storage connection (`FRIEND_FILE_DROP_STORAGE`) in production and
-   refuses to create an unsafe per-instance-memory room when durable storage is
-   unavailable. Room creation uses create-only semantics; answer, consent,
-   manifest, receipt, and relay-byte updates acquire a Blob lease. This makes
-   concurrent function instances serialize their writes instead of replacing
-   one person's relay consent with a stale room copy.
-2. **Exact regression coverage.** `api/integration.test.js` concurrently posts
-   sender and receiver relay consent and asserts the persisted room is ready.
-   It also asserts configured production fails closed without durable storage.
-   The deployed test is named
-   `@regression:live-durable-relay` and performs the real two-browser fallback
-   against Azure storage; it passed after deploy.
-3. **404 build identity.** `public/404.html` now identifies itself as `v1.1.1`,
-   consistent with the app and API.
+The live direct-transfer path produces a false verified receipt after a file
+fails its SHA-256 check. In a fresh two-browser run, the receiver said
+`integrity-check.txt did not match its hash. Rejoin to retry it.` and exposed no
+download, but both browsers still displayed **VERIFIED**, **Transfer finished**,
+and one receipt row for that failed file.
 
-## Verification evidence
+`src/transfer.ts` builds the final direct receipt from every incoming manifest
+entry. It does not restrict the receipt to files that passed `file-end` hash
+verification. Track verified IDs and refuse `transfer-end` completion while
+any file is failed or missing. Add a corrupted-payload regression to the
+`direct-transfer` claim.
 
-- Clean install: `npm ci` passed; root and API production audits reported zero
-  vulnerabilities.
-- Local suite: `npm test` passed with **10** Node/API/config tests and **22**
-  local Chromium tests (the 8 explicitly live-only checks skipped without
-  `LIVE_URL`). `npm run lint` and `npm run build` passed; `dist/index.html` is
-  present. Production assets are 35.83 kB JS (11.73 kB gzip) and 17.17 kB CSS
-  (4.84 kB gzip).
-- Claims: every command listed in `.factory/claims.json` was run from this
-  clean install and passed. This includes all 20 documented claims, with the
-  browser claims run through their declared `npm test -- --grep @claim:…`
-  commands.
-- Durable-storage integration: a temporary, cleaned-up Azure Blob room was
-  created and updated by concurrent sender/receiver consent operations; it
-  retained `{ sender: true, receiver: true }`.
-- Live browser: `LIVE_URL=https://friend-file-drop.sociobot.in npx playwright
-  test tests/live.spec.ts` passed **8/8**. This covers desktop routes and axe,
-  offline reload, direct transfer, and the actual relay fallback. Local
-  product tests cover 390 px, 200% text reflow, keyboard skip/tabs/file focus,
-  touch target size, reduced motion, demo isolation, and receipt flows.
-- Accessibility/privacy: Playwright AxeBuilder found zero serious/critical
-  violations on `/`, `/demo`, `/privacy`, `/terms`, and `/missing-page`;
-  `VERIFY_NODE_MODULES="$PWD/node_modules" /opt/fleet/lib/verify-url.sh
-  https://friend-file-drop.sociobot.in /tmp/friend-file-drop-verify-repair`
-  passed with no console errors. Request-capture claims remain same-origin
-  only and demo remains API/file-input free.
-- PWA and response policy: deployed `/demo` reloaded offline after service
-  worker control. A fingerprinted JS asset returned
-  `Cache-Control: public, max-age=31536000, immutable`; `GET /api/health`
-  returned `Cache-Control: no-store`, service `friend-file-drop-api`, version
-  `1.1.1`, and deployment ID `2e38d8bb-57e2-4590-9332-2f3b60f9dd95`.
-  The styled unknown route returns real HTTP 404 and the updated footer.
-- Lighthouse, live mobile run: **100** Performance, **100** Accessibility,
-  **100** Best Practices, **100** SEO; FCP 0.9 s, LCP 1.3 s, TBT 10 ms, CLS 0.
-  Report: `/tmp/friend-file-drop-lighthouse-repair.json`.
+## Additional defect
 
-## Run and deploy
+**Start for real** leaves `demo:completed` in session storage. Returning to
+Demo restores the prior finished sample instead of starting clean. Clear all
+`demo:` keys when leaving demo mode and test the leave-and-return path. **Reset
+demo** already clears the sample correctly.
+
+## What passed
+
+- All 20 exact commands in `.factory/claims.json` after `npm ci`.
+- `npm test`: 10 Node/API/config tests and 22 local Chromium tests passed.
+- `npm run lint`, `npm run build`, and both production dependency audits.
+- Live suite: 8/8, including normal direct transfer, opt-in durable relay,
+  offline reload, routes, and live axe checks.
+- Live zero-byte direct transfer, concurrent relay consent persistence, 25 MiB
+  exact boundary/rejection, invalid room-code recovery, and invalid receipt
+  import recovery.
+- Cold first-read, one-click demo, 390 px layout, keyboard operation, visible
+  focus, 200% text reflow, reduced motion, same-origin-only demo request log,
+  security/caching headers, route/link crawl, and service-worker update check.
+- Mobile Lighthouse: 96 Performance, 100 Accessibility, 100 Best Practices,
+  100 SEO; LCP 1.3 s and CLS 0.
+- Rate allowance: 90 room/file API requests per client per 60 seconds; request
+  91 returned 429 with `Retry-After: 60`.
+- Live HTML, JS, CSS, and service worker are byte-identical to `dist/`.
+
+The API reports version 1.1.1 and deployment ID
+`2e38d8bb-57e2-4590-9332-2f3b60f9dd95`, but `sourceRevision` is null, so exact
+backend commit identity cannot be independently proven.
+
+## Verify
 
 ```sh
 npm ci
 npm test
 npm run lint
 npm run build
-npm audit --omit=dev --audit-level=high
-npm audit --prefix api --omit=dev --audit-level=high
 LIVE_URL=https://friend-file-drop.sociobot.in npx playwright test tests/live.spec.ts
 ```
 
-Deploy `dist/` and `api/` through the existing `sf-friend-file-drop` Azure
-Static Web App configuration. Production needs the managed, secret app setting
-`FRIEND_FILE_DROP_STORAGE` and `FRIEND_FILE_DROP_REQUIRE_DURABLE_STORAGE=true`;
-the repair set both without committing any secret.
-
-## Known gaps
-
-None. `sourceRevision` is null because the managed Functions environment does
-not supply a source revision variable; the public health response includes the
-API version and platform deployment ID for live identity checks.
+After repairing the receipt integrity path, add and run the corruption
+regression before requesting another independent verification.
