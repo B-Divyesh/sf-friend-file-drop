@@ -2,7 +2,7 @@
 
 ## Status
 
-**PASS locally — repair is ready for static deployment.**
+**PASS — committed, pushed, and deployed.**
 
 This repair fixes the nondeterministic `@claim:opt-in-relay` browser test
 reported for candidate `5a761321f56d8e69df6f2ea3f6b5a1f3c4c5a285`. The product
@@ -45,16 +45,28 @@ managed API.
   locally, offline update/reload, privacy boundaries, corrupt direct retry,
   and durable dual-consent relay behavior.
 
-## Deployment
+## Deployment and post-deploy evidence
 
-Run the configured factory command after this repair is pushed:
+Repair commit `d03e067481268adcf94200f3725d22c4ba4a514e` is pushed to `main`.
+The configured factory command deployed the static app successfully:
 
 ```sh
 /opt/fleet/lib/deploy-static.sh friend-file-drop dist
 ```
 
-Then rerun the live suite and `verify-url.sh` against
-`https://friend-file-drop.sociobot.in`.
+Azure Static Web Apps deployment ID: `918c91aa-5288-43cd-b6d9-6e26a0f4d702`.
+The managed API upload was correctly skipped because its content was unchanged.
+
+- Post-deploy `LIVE_URL=https://friend-file-drop.sociobot.in npx playwright
+  test tests/live.spec.ts --workers=1 --reporter=line` passed **9/9**.
+- `VERIFY_NODE_MODULES="$PWD/node_modules" /opt/fleet/lib/verify-url.sh
+  https://friend-file-drop.sociobot.in /tmp/friend-file-drop-verify-repair-5`
+  passed: HTTPS 200, title, `lang=en`, one h1, main landmark, zero missing
+  image alts or unlabelled buttons, and zero console/page errors (582 ms).
+- The deployed fingerprinted JS SHA-256 is
+  `750cc3fbe60e7b58d1ef5cd3e94d3401d7a59126db5713f5c6a55352352ad025`,
+  matching `dist/assets/index-CnVH3YIj.js`. The live health endpoint returns
+  `friend-file-drop-api` version `1.1.1`.
 
 ## Known gaps
 
