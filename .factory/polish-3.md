@@ -1,0 +1,30 @@
+# Polish round 3 — cumulative finding closure
+
+**Result: PASS.** This round closes every finding in `review-1.md`, `review-2.md`, and `review-3.md`. The deployed source revision is `c594cf8ad79ca24ffb2650583d067f551c7a5f0d` at <https://friend-file-drop.sociobot.in>.
+
+| Finding | Change made | Evidence | Screenshot and live check |
+| --- | --- | --- | --- |
+| F-1-1 | Kept receipt as the result term and kept the pre-send file-list promise under `manifest-before-transfer`. The UI now calls its integrity value a digital fingerprint and labels SHA-256. | `selected file details appear before a room exists @claim:manifest-before-transfer`; clean-clone claim matrix 23/23. | [Live home](evidence/polish-3/live-home-desktop.png); live copy audit and manifest test passed. |
+| F-1-2 | Retained canonical, OG, Twitter, apple-touch metadata and full Demo / How it works / Privacy navigation on the static 404. | `static 404 has full identity metadata and the standard navigation`; live route identity/Axe test. | [Live 404](evidence/polish-3/live-404-desktop.png); `/missing-page` returned HTTP 404. |
+| F-1-3 | Retained the agreed receipt, browser-to-browser, room-code, and result-naming wording. | `reader copy does not regress to the rejected review wording`; route/focus test. | [Live home](evidence/polish-3/live-home-desktop.png); cold copy check passed. |
+| F-1-4 | Kept README outcome-led, under 22 words per sentence, and free of rejected storage and connection jargon. | `.factory/copy-audit.md`; `reader copy does not regress to the rejected review wording`. | README audit passed in the final clean clone. |
+| F-2-1 | Kept the declared one-click ready-demo claim and extended its test to prove a phone visitor sees the action and first sample row in the initial viewport. | `one click opens the isolated demo with three ready sample files @claim:demo-ready-in-one-click`. | [Live mobile demo](evidence/polish-3/live-demo-mobile.png); `live-findings.json` records ready rows and in-viewport controls. |
+| F-2-2 | Retained “continue from where the transfer stopped” in README and privacy copy. | `.factory/copy-audit.md`; rejected-wording regression test. | Final clean-clone command passed. |
+| F-2-3 | Retained plain “temporary data only in this tab” and “saved transfer parts” wording. | `@claim:demo-isolation`; `@claim:local-receipts`; copy audit. | [Live mobile demo](evidence/polish-3/live-demo-mobile.png). |
+| F-3-1 | Reordered and compacted the phone demo; the sample action and first row are visible immediately. Made the yellow demo banner sticky with Reset and Start a real transfer controls. | Updated `@claim:demo-ready-in-one-click` asserts initial row/action/banner geometry and sticky banner after scrolling. | [Live mobile demo](evidence/polish-3/live-demo-mobile.png); [live findings](evidence/polish-3/live-findings.json) records all three geometry checks true. |
+| F-3-2 | Replaced the overbroad demo status with the exact tested API/file statement. Added `connection-metadata-boundary`; captured direct room request bodies prove they contain only code-path and connection offers/answers, not fixture name, fingerprint, bytes, or receipt. Removed the untested encrypted-transport wording; relay copy uses the tested opt-in boundary. | `@claim:demo-no-real-files`; `@claim:connection-metadata-boundary`; strengthened `@claim:opt-in-relay`. | `/privacy` cold check confirms both revised statements; `live-findings.json` records no demo API or foreign request. |
+| F-3-3 | Reduced desktop hero scale and vertical spacing while preserving the notebook spread. The three product facts now fit in 1440 × 900. | `desktop first screen keeps every product fact in view`. | [Live home](evidence/polish-3/live-home-desktop.png); facts end at 710.45, 741.22, and 741.22 px in the cold check. |
+| F-3-4 | Standardized on demo and file list: “Try the demo,” “Files to send,” “Sample files,” and “Incoming files.” | Copy regression test and `.factory/copy-audit.md`. | [Live mobile demo](evidence/polish-3/live-demo-mobile.png); cold live wording check passed. |
+| F-3-5 | Defined digital fingerprint before first SHA-256 use, labeled every shown value, and removed unexplained user-facing hash wording. | `@claim:manifest-before-transfer`; copy regression test. | Live demo and landing checks show “Digital fingerprint (SHA-256)”. |
+| F-3-6 | Renamed the privacy heading to “What leaves your browser.” | Copy regression test. | Live landing cold check confirmed the old heading is absent. |
+| F-3-7 | Removed the CSS-generated `FIELD NOTE 01` label. | Copy regression test. | [Live home](evidence/polish-3/live-home-desktop.png); cold text check confirmed it is absent. |
+| F-3-8 | Changed both SPA and static 404 `h1` values to “Page not found.” | `unknown addresses show the notebook 404 page`; static 404 metadata test; live Axe route test. | [Live 404](evidence/polish-3/live-404-desktop.png); `/missing-page` returns HTTP 404 with that heading. |
+
+## Final verification
+
+- Fresh clone at `170ee28d204beca0757caf0457f22233004fdc89`: clean `npm ci`, then all 23 commands declared in `.factory/claims.json`, passed individually. This includes the new `connection-metadata-boundary` claim.
+- Final local suite: `npm test` passed 19 Node tests and 30 local Chromium tests; the 10 live-only tests skipped without `LIVE_URL`. `npm run lint` passed.
+- Final deployed suite: `LIVE_URL=https://friend-file-drop.sociobot.in EXPECTED_SOURCE_REVISION=c594cf8ad79ca24ffb2650583d067f551c7a5f0d npx playwright test tests/live.spec.ts --workers=1 --reporter=line` passed 10/10.
+- `verify-url.sh` reported one `h1`, `lang=en`, a main landmark, complete image alt text, labelled buttons, and zero console errors; see [verification JSON](evidence/polish-3/verify-live/verify.json).
+- Live Lighthouse: performance 100, accessibility 100, best practices 100, SEO 100; LCP 1.249 s, CLS 0, TBT 47 ms. See [report](evidence/polish-3/lighthouse-live.json).
+- The deployed service worker is `friend-file-drop-v6` and the installed-app start URL is versioned with `v=3`.
