@@ -1,3 +1,29 @@
+# Friend File Drop verification 7 handoff
+
+## Independent release decision — PASS
+
+Candidate `611a9e901af2cd29fda0af2cfb88f16d0ee1c1f4` is accepted for
+<https://friend-file-drop.sociobot.in>. Independent QA used a clean install
+and did not modify product code. Exact evidence, including the required 20/20
+claims run, live privacy/PWA/accessibility checks, API limit result, and the
+three consecutive live relay regressions, is in
+[`verification-7.md`](verification-7.md).
+
+- **PASS:** clean `npm test`, lint, and production build.
+- **PASS:** cold first-read and one-click isolated demo.
+- **PASS:** live direct transfer, retry-after-corruption, and durable relay
+  regression (relay 3/3 consecutive passes).
+- **PASS:** rate limit is 90 requests/minute; 91st response is 429 with
+  `Retry-After: 60`.
+- **Defects:** no critical, high, medium, or low release defects found.
+
+The candidate's only source delta from deployed product commit `d690bb0` is
+documentation; live JS, CSS, and service worker SHA-256 values match this
+candidate build, while API health identifies deployed product source revision
+`d690bb0ecc2973fbd5b4ef2e9a214e20e558f962` and version `1.1.1`.
+
+---
+
 # Friend File Drop repair 6 handoff
 
 ## Status
