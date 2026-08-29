@@ -4,14 +4,21 @@
     "claim": "The sample transfer finishes with three matching file hashes and a receipt.",
     "where": "demo manifest and receipt",
     "test": "npm test -- --grep @claim:demo-receipt",
-    "sandbox": "fresh browser context at /demo; run bundled sample transfer"
+    "sandbox": "fresh browser context at /?demo=1; run bundled sample transfer"
+  },
+  {
+    "id": "manifest-before-transfer",
+    "claim": "The sender sees each selected file's name, size, and SHA-256 hash before creating a room or sending.",
+    "where": "transfer sheet and How browser-to-browser transfer works",
+    "test": "npm test -- --grep @claim:manifest-before-transfer",
+    "sandbox": "fresh browser context; select a fixture, assert its name, size, and full SHA-256 value before any room request"
   },
   {
     "id": "no-account",
     "claim": "No account or app is needed.",
     "where": "landing facts and README",
     "test": "npm test -- --grep @claim:no-account",
-    "sandbox": "fresh browser context at /demo; assert transfer is ready without identity fields"
+    "sandbox": "fresh browser context at /?demo=1; assert transfer is ready without identity fields"
   },
   {
     "id": "free-use",
@@ -32,7 +39,7 @@
     "claim": "The installed app works offline after the first visit.",
     "where": "README",
     "test": "npm test -- --grep @claim:offline-reload",
-    "sandbox": "fresh browser context at /demo; wait for service worker control, go offline, and reload"
+    "sandbox": "fresh browser context at /?demo=1; wait for service worker control, go offline, and reload"
   },
   {
     "id": "six-word-room",

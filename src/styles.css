@@ -92,6 +92,7 @@ code { font-family: var(--mono); font-size: .82em; overflow-wrap: anywhere; }
 .file-name strong, .file-name span { display: block; min-width: 0; }
 .file-name strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .file-name span { color: var(--ink-soft); font-size: .78rem; }
+.file-hash { display: block; max-width: 64ch; margin-top: .15rem; color: var(--ink-soft); font-size: .78rem; line-height: 1.35; overflow-wrap: anywhere; }
 .file-dot { flex: 0 0 auto; width: 16px; height: 21px; border: 2px solid var(--ink); background: var(--paper); clip-path: polygon(0 0, 70% 0, 100% 25%, 100% 100%, 0 100%); }
 progress { width: 100%; height: 12px; border: 1px solid var(--ink); background: var(--paper-deep); }
 progress::-webkit-progress-bar { background: var(--paper-deep); }

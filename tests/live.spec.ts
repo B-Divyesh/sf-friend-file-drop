@@ -10,21 +10,32 @@ for (const route of ['/', '/demo', '/privacy', '/terms', '/missing-page']) {
     expect(response?.status()).toBe(route === '/missing-page' ? 404 : 200);
     await expect(page.locator('h1')).toHaveCount(1);
     await expect(page.locator('main')).toHaveCount(1);
+    await expect(page.locator('link[rel="canonical"]')).toHaveCount(1);
+    await expect(page.locator('meta[property="og:title"]')).toHaveCount(1);
+    await expect(page.locator('meta[property="og:description"]')).toHaveCount(1);
+    await expect(page.locator('meta[property="og:image"]')).toHaveCount(1);
+    await expect(page.locator('meta[name="twitter:card"]')).toHaveCount(1);
+    await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveCount(1);
+    await expect(page.getByRole('link', { name: 'How it works' })).toHaveCount(1);
+    await expect(page.getByRole('link', { name: 'Privacy', exact: true })).toHaveCount(2);
+    await expect(page.getByRole('link', { name: 'Terms', exact: true })).toHaveCount(1);
     const results = await new AxeBuilder({ page: page as never }).analyze();
     expect(results.violations.filter((item) => ['serious', 'critical'].includes(item.impact || ''))).toEqual([]);
   });
 }
 
-test('deployed demo stays same-origin and Start for real discards its state @regression:live-demo-exit-clears', async ({ page }) => {
+test('deployed one-click demo stays same-origin and exit discards its state @regression:live-demo-exit-clears', async ({ page }) => {
   const foreignRequests: string[] = [];
   page.on('request', (request) => {
     if (new URL(request.url()).origin !== new URL(liveUrl!).origin) foreignRequests.push(request.url());
   });
-  await page.goto(`${liveUrl}/demo`);
+  await page.goto(liveUrl!);
+  await page.getByRole('link', { name: 'Try it with sample data' }).click();
+  await expect(page).toHaveURL(`${liveUrl}/?demo=1`);
   await page.getByRole('button', { name: 'Send sample files' }).click();
   await expect(page.getByRole('heading', { name: 'Transfer finished' })).toBeVisible();
   expect(await page.evaluate(() => Object.keys(sessionStorage).filter((key) => key.startsWith('demo:')))).toEqual(['demo:completed']);
-  await page.getByRole('link', { name: 'Start for real' }).click();
+  await page.getByRole('link', { name: 'Start a real transfer' }).click();
   expect(await page.evaluate(() => Object.keys(sessionStorage).filter((key) => key.startsWith('demo:')))).toEqual([]);
   await page.getByRole('link', { name: 'Demo', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Send sample files' })).toBeVisible();

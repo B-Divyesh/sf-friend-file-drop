@@ -91,7 +91,7 @@ test('health endpoint identifies the deployed API build @claim:api-health', asyn
   assert.equal(context.res.status, 200);
   assert.equal(context.res.headers['cache-control'], 'no-store');
   assert.equal(context.res.body.service, 'friend-file-drop-api');
-  assert.match(context.res.body.version, /^1\.1\.1$/);
+  assert.match(context.res.body.version, /^1\.1\.2$/);
   assert.ok(Object.hasOwn(context.res.body, 'sourceRevision'));
   assert.ok(Object.hasOwn(context.res.body, 'deploymentId'));
 });

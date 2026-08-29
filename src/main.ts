@@ -22,6 +22,7 @@ const descriptions: Record<Route, string> = {
 };
 
 function routeFromPath(path: string): Route {
+  if (path === '/' && new URLSearchParams(location.search).get('demo') === '1') return 'demo';
   if (path === '/') return 'home';
   if (path === '/demo') return 'demo';
   if (path === '/privacy') return 'privacy';
@@ -56,7 +57,7 @@ function footer(): string {
   return `<footer class="site-footer">
     <p>Send private files and keep a finished receipt.</p>
     <nav aria-label="Footer navigation"><a href="/privacy" data-link>Privacy</a><a href="/terms" data-link>Terms</a></nav>
-    <p>Built by Param Factory · v1.1.1 · <span title="Generated with the factory image model">Original generated art</span></p>
+    <p>Built by Param Factory · v1.1.2 · <span title="Generated with the factory image model">Original generated art</span></p>
   </footer>`;
 }
 
@@ -67,7 +68,7 @@ function shell(content: string, demo = false): string {
 function demoBanner(): string {
   return `<aside class="demo-banner" aria-label="Demo mode">
     <strong>Demo — sample data, nothing is saved</strong>
-    <span class="demo-actions"><button class="text-button" id="reset-demo" type="button">Reset demo</button><a href="/" data-link data-leave-demo>Start for real</a></span>
+    <span class="demo-actions"><button class="text-button" id="reset-demo" type="button">Reset demo</button><a href="/" data-link data-leave-demo>Start a real transfer</a></span>
   </aside>`;
 }
 
@@ -83,7 +84,7 @@ function homePage(): string {
         <h1 id="home-title" tabindex="-1">Send files straight to someone you trust</h1>
         <p class="lead">For friends on different devices who need the files and proof that they arrived.</p>
         <div class="hero-actions">
-          <a class="button primary" href="/demo" data-link>Try it with sample data</a>
+          <a class="button primary" href="/?demo=1" data-link>Try it with sample data</a>
           <a class="button secondary" href="#drop">Choose your files</a>
         </div>
         <p class="action-note">The demo opens a ready transfer. Your own files stay untouched.</p>
@@ -95,7 +96,7 @@ function homePage(): string {
       </div>
       <figure class="hero-art">
         <picture><img src="/assets/notebook-transfer.webp" width="768" height="512" fetchpriority="high" decoding="async" alt="A paper bridge carries three file cards from a phone to a laptop." /></picture>
-        <figcaption>Each file crosses once. Both sides get the same record.</figcaption>
+        <figcaption>Each selected file has a receipt. Both sides get the same receipt.</figcaption>
       </figure>
     </section>
     <section class="workbench ruled" id="drop" aria-labelledby="workbench-title">
@@ -104,15 +105,15 @@ function homePage(): string {
       <div id="receipt-history"></div>
     </section>
     <section class="how-section" id="how" aria-labelledby="how-title">
-      <div class="section-intro"><p class="margin-number">02</p><div><h2 id="how-title">How the files cross</h2><p>The two browsers agree on one private path.</p></div></div>
+      <div class="section-intro"><p class="margin-number">02</p><div><h2 id="how-title">How browser-to-browser transfer works</h2><p>The room code connects the two browsers.</p></div></div>
       <ol class="lab-steps">
         <li><span>1</span><div><h3>Choose the files</h3><p>The sender sees every name, size, and SHA-256 hash before sending.</p></div></li>
-        <li><span>2</span><div><h3>Share six words</h3><p>The receiver enters the room code. Short-lived signaling opens a direct browser path.</p></div></li>
+        <li><span>2</span><div><h3>Share six words</h3><p>The receiver enters the room code. The room code works for 15 minutes.</p></div></li>
         <li><span>3</span><div><h3>Check the receipt</h3><p>Both browsers record the names, hashes, and finish time.</p></div></li>
       </ol>
     </section>
     <section class="limits-section" aria-labelledby="limits-title">
-      <div class="torn-note"><p class="eyebrow">Margin note</p><h2 id="limits-title">What the room service handles</h2><ul><li>Room connection details expire after 15 minutes.</li><li>The app never asks for your contacts.</li><li>Files go direct unless both people choose the relay.</li><li>The relay accepts up to 25 MB and removes file bytes after the receipt.</li></ul></div>
+      <div class="torn-note"><h2 id="limits-title">What the room service handles</h2><ul><li>Room connection details expire after 15 minutes.</li><li>The app never asks for your contacts.</li><li>Files go direct unless both people choose the relay.</li><li>The relay accepts up to 25 MB and removes file bytes after the receipt.</li></ul></div>
     </section>
   </main>`);
 }
@@ -149,7 +150,7 @@ const sampleFiles: FileManifest[] = [
 ];
 
 function fileRow(file: FileManifest, withRemove = false): string {
-  return `<li class="file-row" data-file-id="${file.id}"><div class="file-name"><span class="file-dot" aria-hidden="true"></span><div><strong>${escapeText(file.name)}</strong><span>${formatBytes(file.size)} · SHA-256 <code>${file.hash.slice(0, 12)}…</code></span></div></div><progress value="0" max="${file.size}" aria-label="Progress for ${escapeText(file.name)}"></progress><span class="file-status">Waiting</span>${withRemove ? `<button class="remove-file" type="button" data-remove="${file.id}" aria-label="Remove ${escapeText(file.name)}">Remove</button>` : ''}</li>`;
+  return `<li class="file-row" data-file-id="${file.id}"><div class="file-name"><span class="file-dot" aria-hidden="true"></span><div><strong>${escapeText(file.name)}</strong><span>${formatBytes(file.size)} · SHA-256</span><code class="file-hash">${file.hash}</code></div></div><progress value="0" max="${file.size}" aria-label="Progress for ${escapeText(file.name)}"></progress><span class="file-status">Waiting</span>${withRemove ? `<button class="remove-file" type="button" data-remove="${file.id}" aria-label="Remove ${escapeText(file.name)}">Remove</button>` : ''}</li>`;
 }
 
 function receiptMarkup(receipt: SavedReceipt): string {
@@ -431,9 +432,14 @@ function bindLinks(): void {
 function render(route = routeFromPath(location.pathname), focus = false): void {
   document.title = titles[route];
   document.querySelector<HTMLMetaElement>('meta[name="description"]')!.content = descriptions[route];
-  document.querySelector<HTMLLinkElement>('link[rel="canonical"]')!.href = `https://friend-file-drop.sociobot.in${route === 'not-found' ? '/404' : location.pathname}`;
+  const canonicalPath = route === 'not-found' ? '/404' : route === 'demo' ? '/demo' : location.pathname;
+  const canonicalUrl = `https://friend-file-drop.sociobot.in${canonicalPath}`;
+  document.querySelector<HTMLLinkElement>('link[rel="canonical"]')!.href = canonicalUrl;
   document.querySelector<HTMLMetaElement>('meta[property="og:title"]')!.content = titles[route];
   document.querySelector<HTMLMetaElement>('meta[property="og:description"]')!.content = descriptions[route];
+  document.querySelector<HTMLMetaElement>('meta[property="og:url"]')!.content = canonicalUrl;
+  document.querySelector<HTMLMetaElement>('meta[name="twitter:title"]')!.content = titles[route];
+  document.querySelector<HTMLMetaElement>('meta[name="twitter:description"]')!.content = descriptions[route];
   app.innerHTML = route === 'home' ? homePage() : route === 'demo' ? demoPage() : route === 'privacy' || route === 'terms' ? legalPage(route) : notFoundPage();
   document.body.dataset.route = route;
   bindLinks();

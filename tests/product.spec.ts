@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import type { Browser, Page, Route } from '@playwright/test';
+import { createHash } from 'node:crypto';
 
 type MockRoom = {
   offer?: unknown;
@@ -177,7 +178,7 @@ test('late direct answer cannot replace relay consent state @regression:relay-co
 });
 
 test('sample transfer produces a three-file receipt @claim:demo-receipt', async ({ page }) => {
-  await page.goto('/demo');
+  await page.goto('/?demo=1');
   await expect(page.getByText('Demo — sample data, nothing is saved')).toBeVisible();
   await page.getByRole('button', { name: 'Send sample files' }).click();
   await expect(page.getByRole('heading', { name: 'Transfer finished' })).toBeVisible();
@@ -187,7 +188,7 @@ test('sample transfer produces a three-file receipt @claim:demo-receipt', async 
 });
 
 test('demo opens without an account step @claim:no-account', async ({ page }) => {
-  await page.goto('/demo');
+  await page.goto('/?demo=1');
   await expect(page.locator('input[type="password"], input[type="email"]')).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Send sample files' })).toBeEnabled();
 });
@@ -198,6 +199,14 @@ test('the free version has no payment action @claim:free-use', async ({ page }) 
   await expect(page.getByRole('link', { name: /buy|pay|subscribe/i })).toHaveCount(0);
 });
 
+test('the first-screen sample action enters the isolated query route in one click', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('link', { name: 'Try it with sample data' }).click();
+  await expect(page).toHaveURL('/?demo=1');
+  await expect(page.getByText('Demo — sample data, nothing is saved')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Reset demo' })).toBeVisible();
+});
+
 test('demo stays isolated and leaving clears its session @claim:demo-isolation @claim:demo-no-real-files @regression:demo-exit-clears', async ({ page }) => {
   const foreign: string[] = [];
   const apiRequests: string[] = [];
@@ -206,7 +215,7 @@ test('demo stays isolated and leaving clears its session @claim:demo-isolation @
     if (url.origin !== 'http://127.0.0.1:4173') foreign.push(request.url());
     if (url.pathname.startsWith('/api/')) apiRequests.push(request.url());
   });
-  await page.goto('/demo');
+  await page.goto('/?demo=1');
   await page.getByRole('button', { name: 'Send sample files' }).click();
   await expect(page.getByRole('heading', { name: 'Transfer finished' })).toBeVisible();
   expect(foreign).toEqual([]);
@@ -214,7 +223,7 @@ test('demo stays isolated and leaving clears its session @claim:demo-isolation @
   expect(await page.locator('input[type="file"]').count()).toBe(0);
   expect(await page.evaluate(() => Object.keys(sessionStorage))).toEqual(['demo:completed']);
   expect(await page.evaluate(() => indexedDB.databases().then((items) => items.map((item) => item.name)))).not.toContain('friend-file-drop');
-  await page.getByRole('link', { name: 'Start for real' }).click();
+  await page.getByRole('link', { name: 'Start a real transfer' }).click();
   await expect(page).toHaveURL('/');
   expect(await page.evaluate(() => Object.keys(sessionStorage).filter((key) => key.startsWith('demo:')))).toEqual([]);
   await page.getByRole('link', { name: 'Demo', exact: true }).click();
@@ -223,7 +232,7 @@ test('demo stays isolated and leaving clears its session @claim:demo-isolation @
 });
 
 test('demo reloads after the network is turned off @claim:offline-reload', async ({ page, context }) => {
-  await page.goto('/demo');
+  await page.goto('/?demo=1');
   await page.evaluate(async () => {
     await navigator.serviceWorker.ready;
     if (!navigator.serviceWorker.controller) await new Promise<void>((resolve) => navigator.serviceWorker.addEventListener('controllerchange', () => resolve(), { once: true }));
@@ -233,6 +242,24 @@ test('demo reloads after the network is turned off @claim:offline-reload', async
   await page.reload();
   await expect(page).toHaveTitle('Demo — Friend File Drop');
   await expect(page.getByRole('heading', { level: 1, name: 'Send sample files and check the receipt' })).toBeVisible();
+});
+
+test('selected file details appear before a room exists @claim:manifest-before-transfer', async ({ page }) => {
+  const bytes = Buffer.from('Visible before any room is created.');
+  const hash = createHash('sha256').update(bytes).digest('hex');
+  const roomRequests: string[] = [];
+  page.on('request', (request) => {
+    if (new URL(request.url()).pathname.startsWith('/api/rooms/')) roomRequests.push(request.url());
+  });
+  await page.goto('/');
+  await page.locator('#file-input').setInputFiles({ name: 'before-room.txt', mimeType: 'text/plain', buffer: bytes });
+  const row = page.locator('#real-files .file-row');
+  await expect(row.getByText('before-room.txt')).toBeVisible();
+  await expect(row.getByText('35 B · SHA-256')).toBeVisible();
+  await expect(row.getByText(hash)).toBeVisible();
+  await expect(page.locator('.room-label')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Send 1 file' })).toBeDisabled();
+  expect(roomRequests).toEqual([]);
 });
 
 test('direct transfer withholds receipts for corrupt bytes until a verified retry @claim:six-word-room @claim:direct-transfer @claim:local-receipts @regression:corrupt-direct-receipt', async ({ browser }) => {
@@ -457,6 +484,28 @@ for (const route of ['/', '/demo', '/privacy', '/terms']) {
   });
 }
 
+test('history routes update titles, metadata, focus, and legal links', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('link', { name: 'Demo', exact: true }).click();
+  await expect(page).toHaveURL('/demo');
+  await expect(page).toHaveTitle('Demo — Friend File Drop');
+  await expect(page.locator('h1')).toBeFocused();
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://friend-file-drop.sociobot.in/demo');
+  await expect(page.locator('meta[property="og:title"]')).toHaveAttribute('content', 'Demo — Friend File Drop');
+  await expect(page.locator('meta[name="twitter:title"]')).toHaveAttribute('content', 'Demo — Friend File Drop');
+  await page.getByRole('link', { name: 'Privacy', exact: true }).first().click();
+  await expect(page).toHaveURL('/privacy');
+  await expect(page).toHaveTitle('Privacy — Friend File Drop');
+  await expect(page.locator('h1')).toBeFocused();
+  await page.getByRole('link', { name: 'Terms', exact: true }).click();
+  await expect(page).toHaveURL('/terms');
+  await expect(page).toHaveTitle('Terms — Friend File Drop');
+  await expect(page.locator('h1')).toBeFocused();
+  await page.goBack();
+  await expect(page).toHaveURL('/privacy');
+  await expect(page.locator('h1')).toBeFocused();
+});
+
 test('unknown addresses show the notebook 404 page', async ({ page }) => {
   await page.goto('/missing-page');
   await expect(page).toHaveTitle('Page not found — Friend File Drop');
@@ -493,6 +542,14 @@ test('390px layout reflows at 200 percent text size', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
   await page.evaluate(() => { document.documentElement.style.fontSize = '34px'; });
+  expect(await page.locator('body').evaluate((body) => ({ width: body.scrollWidth, viewport: document.documentElement.clientWidth }))).toEqual({ width: 390, viewport: 390 });
+});
+
+test('full pre-transfer hash stays inside the mobile layout', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  await page.locator('#file-input').setInputFiles({ name: 'long-hash-name.txt', mimeType: 'text/plain', buffer: Buffer.from('mobile manifest') });
+  await expect(page.locator('.file-hash')).toHaveText(/^[a-f0-9]{64}$/);
   expect(await page.locator('body').evaluate((body) => ({ width: body.scrollWidth, viewport: document.documentElement.clientWidth }))).toEqual({ width: 390, viewport: 390 });
 });
 
