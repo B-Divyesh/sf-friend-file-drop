@@ -48,6 +48,23 @@ function installRoomApi(page: Page, rooms: Map<string, MockRoom>): Promise<void>
   });
 }
 
+async function receiptCount(page: Page): Promise<number> {
+  return page.evaluate(async () => {
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open('friend-file-drop', 2);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    const records = await new Promise<unknown[]>((resolve, reject) => {
+      const request = db.transaction('receipts').objectStore('receipts').getAll();
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    db.close();
+    return records.length;
+  });
+}
+
 test('sample transfer produces a three-file receipt @claim:demo-receipt', async ({ page }) => {
   await page.goto('/demo');
   await expect(page.getByText('Demo — sample data, nothing is saved')).toBeVisible();
@@ -70,7 +87,7 @@ test('the free version has no payment action @claim:free-use', async ({ page }) 
   await expect(page.getByRole('link', { name: /buy|pay|subscribe/i })).toHaveCount(0);
 });
 
-test('demo stays isolated from real storage and third parties @claim:demo-isolation @claim:demo-no-real-files', async ({ page }) => {
+test('demo stays isolated and leaving clears its session @claim:demo-isolation @claim:demo-no-real-files @regression:demo-exit-clears', async ({ page }) => {
   const foreign: string[] = [];
   const apiRequests: string[] = [];
   page.on('request', (request) => {
@@ -86,6 +103,12 @@ test('demo stays isolated from real storage and third parties @claim:demo-isolat
   expect(await page.locator('input[type="file"]').count()).toBe(0);
   expect(await page.evaluate(() => Object.keys(sessionStorage))).toEqual(['demo:completed']);
   expect(await page.evaluate(() => indexedDB.databases().then((items) => items.map((item) => item.name)))).not.toContain('friend-file-drop');
+  await page.getByRole('link', { name: 'Start for real' }).click();
+  await expect(page).toHaveURL('/');
+  expect(await page.evaluate(() => Object.keys(sessionStorage).filter((key) => key.startsWith('demo:')))).toEqual([]);
+  await page.getByRole('link', { name: 'Demo', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Send sample files' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Transfer finished' })).toHaveCount(0);
 });
 
 test('demo reloads after the network is turned off @claim:offline-reload', async ({ page, context }) => {
@@ -101,7 +124,7 @@ test('demo reloads after the network is turned off @claim:offline-reload', async
   await expect(page.getByRole('heading', { level: 1, name: 'Send sample files and check the receipt' })).toBeVisible();
 });
 
-test('six words join two browsers for a direct verified transfer @claim:six-word-room @claim:direct-transfer @claim:local-receipts', async ({ browser }) => {
+test('direct transfer withholds receipts for corrupt bytes until a verified retry @claim:six-word-room @claim:direct-transfer @claim:local-receipts @regression:corrupt-direct-receipt', async ({ browser }) => {
   const senderContext = await browser.newContext();
   const receiverContext = await browser.newContext();
   const sender = await senderContext.newPage();
@@ -118,17 +141,31 @@ test('six words join two browsers for a direct verified transfer @claim:six-word
   await receiver.locator('#room-code').fill(code!);
   await receiver.getByRole('button', { name: 'Join this room' }).click();
   await expect(sender.getByText('Devices connected. The direct path is ready.')).toBeVisible({ timeout: 12_000 });
+  await sender.evaluate(() => {
+    const nativeSlice = File.prototype.slice;
+    Object.defineProperty(window, '__restoreFileSlice', {
+      configurable: true,
+      value: () => { File.prototype.slice = nativeSlice; }
+    });
+    File.prototype.slice = function (this: File, start = 0, end = this.size, contentType = this.type): Blob {
+      return new Blob([new Uint8Array(Math.max(0, end - start)).fill(120)], { type: contentType });
+    };
+  });
+  await sender.getByRole('button', { name: 'Send 1 file' }).click();
+  await expect(receiver.getByText('hello-friend.txt did not match its hash. Rejoin to retry it.')).toBeVisible();
+  await expect(receiver.locator('#real-files .file-status')).toHaveText('Failed');
+  await expect(receiver.getByRole('link', { name: 'Save file' })).toHaveCount(0);
+  await expect(receiver.getByRole('heading', { name: 'Transfer finished' })).toHaveCount(0);
+  await expect(sender.getByRole('heading', { name: 'Transfer finished' })).toHaveCount(0);
+  expect(await Promise.all([receiptCount(sender), receiptCount(receiver)])).toEqual([0, 0]);
+  await sender.waitForTimeout(250);
+  await sender.evaluate(() => (window as typeof window & { __restoreFileSlice: () => void }).__restoreFileSlice());
   await sender.getByRole('button', { name: 'Send 1 file' }).click();
   await expect(receiver.getByRole('heading', { name: 'Transfer finished' })).toBeVisible({ timeout: 12_000 });
   await expect(receiver.getByRole('link', { name: 'Save file' })).toHaveAttribute('download', 'hello-friend.txt');
   await expect(sender.getByRole('heading', { name: 'Transfer finished' })).toBeVisible();
   await expect.poll(() => sender.evaluate(() => indexedDB.databases().then((items) => items.map((item) => item.name)))).toContain('friend-file-drop');
-  expect(await sender.evaluate(async () => {
-    const db = await new Promise<IDBDatabase>((resolve) => { const request = indexedDB.open('friend-file-drop', 2); request.onsuccess = () => resolve(request.result); });
-    const records = await new Promise<unknown[]>((resolve) => { const request = db.transaction('receipts').objectStore('receipts').getAll(); request.onsuccess = () => resolve(request.result); });
-    db.close();
-    return records.length;
-  })).toBe(1);
+  expect(await Promise.all([receiptCount(sender), receiptCount(receiver)])).toEqual([1, 1]);
   await senderContext.close();
   await receiverContext.close();
 });

@@ -7,6 +7,7 @@ export type TransferHooks = {
   onProgress: (fileId: string, received: number, total: number) => void;
   onManifest: (files: FileManifest[]) => void;
   onFile: (manifest: FileManifest, blob: Blob) => void;
+  onFileError: (manifest: FileManifest) => void;
   onReceipt: (receipt: SavedReceipt) => void;
 };
 
@@ -48,6 +49,8 @@ export class DirectTransfer {
   private channel?: RTCDataChannel;
   private room: RoomService;
   private incoming = new Map<string, { manifest: FileManifest; chunks: ArrayBuffer[]; received: number }>();
+  private verifiedIncoming = new Set<string>();
+  private failedIncoming = new Set<string>();
   private currentFile = '';
   private receiveQueue = Promise.resolve();
   private resumeWaiters = new Map<string, (offset: number) => void>();
@@ -220,6 +223,10 @@ export class DirectTransfer {
     }
     const message = JSON.parse(data) as { type: string; files?: FileManifest[]; id?: string; offset?: number; receipt?: SavedReceipt };
     if (message.type === 'manifest' && message.files) {
+      this.incoming.clear();
+      this.verifiedIncoming.clear();
+      this.failedIncoming.clear();
+      this.currentFile = '';
       message.files.forEach((manifest) => this.incoming.set(manifest.id, { manifest, chunks: [], received: 0 }));
       this.hooks.onManifest(message.files);
     }
@@ -227,6 +234,8 @@ export class DirectTransfer {
       this.currentFile = message.id;
       const entry = this.incoming.get(message.id);
       if (!entry) return;
+      this.verifiedIncoming.delete(message.id);
+      this.failedIncoming.delete(message.id);
       const chunks = await getPartialChunks(this.roomCode, message.id);
       const received = chunks.reduce((total, chunk) => total + chunk.byteLength, 0);
       if (received <= entry.manifest.size) {
@@ -249,13 +258,26 @@ export class DirectTransfer {
       const hash = await hashFile(blob);
       if (hash !== entry.manifest.hash) {
         await clearPartialChunks(this.roomCode, message.id);
+        entry.chunks = [];
+        entry.received = 0;
+        this.verifiedIncoming.delete(message.id);
+        this.failedIncoming.add(message.id);
+        this.hooks.onFileError(entry.manifest);
         this.hooks.onState(`${entry.manifest.name} did not match its hash. Rejoin to retry it.`, 'error');
         return;
       }
       await clearPartialChunks(this.roomCode, message.id);
+      this.failedIncoming.delete(message.id);
+      this.verifiedIncoming.add(message.id);
       this.hooks.onFile(entry.manifest, blob);
     }
     if (message.type === 'transfer-end') {
+      const everyFileVerified = this.incoming.size > 0
+        && [...this.incoming.keys()].every((id) => this.verifiedIncoming.has(id));
+      if (!everyFileVerified) {
+        if (this.failedIncoming.size === 0) this.hooks.onState('The transfer ended before every file was verified. Rejoin to retry it.', 'error');
+        return;
+      }
       const files = [...this.incoming.values()].map(({ manifest }) => ({ name: manifest.name, size: manifest.size, hash: manifest.hash }));
       const receipt: SavedReceipt = { id: crypto.randomUUID(), roomCode: this.roomCode, completedAt: new Date().toISOString(), direction: 'received', files };
       this.hooks.onReceipt(receipt);

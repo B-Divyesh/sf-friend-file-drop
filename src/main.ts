@@ -67,8 +67,12 @@ function shell(content: string, demo = false): string {
 function demoBanner(): string {
   return `<aside class="demo-banner" aria-label="Demo mode">
     <strong>Demo — sample data, nothing is saved</strong>
-    <span class="demo-actions"><button class="text-button" id="reset-demo" type="button">Reset demo</button><a href="/" data-link>Start for real</a></span>
+    <span class="demo-actions"><button class="text-button" id="reset-demo" type="button">Reset demo</button><a href="/" data-link data-leave-demo>Start for real</a></span>
   </aside>`;
+}
+
+function clearDemoStorage(): void {
+  Object.keys(sessionStorage).filter((key) => key.startsWith('demo:')).forEach((key) => sessionStorage.removeItem(key));
 }
 
 function homePage(): string {
@@ -205,7 +209,7 @@ function setupDemo(): void {
     }, 70);
   });
   document.querySelector('#reset-demo')?.addEventListener('click', () => {
-    Object.keys(sessionStorage).filter((key) => key.startsWith('demo:')).forEach((key) => sessionStorage.removeItem(key));
+    clearDemoStorage();
     render('demo', false);
   });
 }
@@ -259,6 +263,10 @@ function setupTransferApp(): void {
         link.className = 'save-file';
         row.append(link);
       }
+    },
+    onFileError: (manifest: FileManifest) => {
+      const row = root.querySelector<HTMLElement>(`[data-file-id="${manifest.id}"]`);
+      if (row) row.querySelector<HTMLElement>('.file-status')!.textContent = 'Failed';
     },
     onReceipt: async (receipt: SavedReceipt) => {
       await saveReceipt(receipt);
@@ -414,6 +422,7 @@ function bindLinks(): void {
   document.querySelectorAll<HTMLAnchorElement>('a[data-link]').forEach((link) => link.addEventListener('click', (event) => {
     if (event.ctrlKey || event.metaKey || event.shiftKey || link.target) return;
     event.preventDefault();
+    if (link.hasAttribute('data-leave-demo')) clearDemoStorage();
     history.pushState({}, '', link.href);
     render(routeFromPath(location.pathname), true);
   }));
